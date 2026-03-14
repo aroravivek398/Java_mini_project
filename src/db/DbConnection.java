@@ -26,5 +26,23 @@ public class DbConnection{
 		conn.close();
 	}
 	
-	
+	public UserModel loginUser(String email,String password) throws Exception{
+		primaryExecution();
+		String query = "select * from users where email = ? and password = ?";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setString(1, email);
+		ps.setString(2, password);
+		
+		 ResultSet rs = ps.executeQuery();
+		 
+		 if(rs.next()) {
+			 UserModel user = new UserModel(rs.getString("name"),rs.getString("email"),rs.getString("password"));
+			 conn.close();
+			 return user;
+		 }
+		 else {
+			 conn.close();
+			 return null;
+		 }
+	}
 }
