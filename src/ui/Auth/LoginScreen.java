@@ -10,6 +10,7 @@ import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
 
 import model.UserModel;
+import ui.DashboardScreen;
 import util.Validator;
 
 public class LoginScreen extends JFrame implements ActionListener {
@@ -58,7 +59,7 @@ public class LoginScreen extends JFrame implements ActionListener {
         card.add(title);
         card.add(Box.createVerticalStrut(24));
 
-        /* ---------- Fields using same createInput as SignUp ---------- */
+        /* ---------- Fields ---------- */
 
         emailField    = new JTextField();
         passwordField = new JPasswordField();
@@ -145,7 +146,7 @@ public class LoginScreen extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    /* ---------- Same createInput as SignUp & ForgotPassword ---------- */
+    /* ---------- createInput — same as SignUp & ForgotPassword ---------- */
 
     private JPanel createInput(String labelText, JComponent field) {
 
@@ -202,9 +203,8 @@ public class LoginScreen extends JFrame implements ActionListener {
                 UserModel    user = db.loginUser(email, password);
 
                 if (user != null) {
-                    JOptionPane.showMessageDialog(this, "Login Successful");
-                    // new DashboardScreen();
-                    // dispose();
+                    new DashboardScreen(user);
+                    dispose();
                 } else {
                     JOptionPane.showMessageDialog(this, "Invalid Email or Password");
                 }
