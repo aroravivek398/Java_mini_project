@@ -1,7 +1,10 @@
 package ui.Auth;
 
-import javax.swing.*;
+	import javax.swing.*;
 import javax.swing.border.*;
+
+import db.DbConnection;
+
 import java.awt.*;
 import java.awt.event.*;
 import model.UserModel;
@@ -166,13 +169,11 @@ public class LoginScreen extends JFrame implements ActionListener {
             }
 
             try{
-
-                UserModel user = new UserModel("",email,password);
                 DbConnection db = new DbConnection();
 
-                boolean valid = db.checkUser(user);
+                UserModel user  = db.loginUser(email, password);
 
-                if(valid){
+                if(user != null){
 
                     JOptionPane.showMessageDialog(this,"Login Successful");
 
