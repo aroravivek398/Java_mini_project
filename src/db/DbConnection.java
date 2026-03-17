@@ -73,6 +73,7 @@ public class DbConnection{
 		 
 		 if(rs.next()) {
 			 UserModel user = new UserModel(rs.getString("name"),rs.getString("email"),rs.getString("password"));
+			 user.setId(rs.getInt("id"));
 			 conn.close();
 			 return user;
 		 }
