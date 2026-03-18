@@ -213,6 +213,7 @@ public class LoginScreen extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, ex.getMessage());
             }
         }
+        
     }
 
     public static void main(String[] args) {

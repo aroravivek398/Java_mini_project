@@ -15,4 +15,9 @@ public class UserModel {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	public Object getId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
