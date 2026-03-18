@@ -1,6 +1,7 @@
 package model;
 
 public class UserModel {
+	private int user_id;
 	public String name;
 	public String email;
 	public String password;
@@ -13,11 +14,14 @@ public class UserModel {
 
 	public String getName() {
 		// TODO Auto-generated method stub
-		return null;
+		return this.name;
+	}
+	public void setId(int id) {
+		this.user_id = id;
+	}
+	public int getId() {
+		return this.user_id;
 	}
 
-	public Object getId() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 }

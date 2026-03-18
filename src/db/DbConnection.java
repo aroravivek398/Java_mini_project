@@ -17,7 +17,7 @@ public class DbConnection{
 	    String email    = user.email;
 	    String password = user.password;
 
-	    String query = "INSERT INTO users(name, email, password) VALUES (?, ?, ?)";
+	    String query = "insert into users(name, email, password) values (?, ?, ?)";
 	    PreparedStatement ps = conn.prepareStatement(query);
 	    ps.setString(1, name);
 	    ps.setString(2, email);
@@ -28,22 +28,41 @@ public class DbConnection{
 
 	    return rowsAffected > 0; 
 	}
-
-	public boolean checkUser(UserModel user) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 	public boolean emailExists(String email) throws Exception {
-
-	    return false;
+		primaryExecution();
+		String query = "select * from users where email = ?";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setString(1, email);
+		
+		ResultSet rs = ps.executeQuery();
+		if(rs.next()) { 
+			conn.close();
+			return true; 
+		}else {
+			conn.close();
+			return false;
+		} 
 	}
 
-	public void updatePassword(String email, String password) {
-		// TODO Auto-generated method stub
+	public boolean updatePassword(String email, String password) throws Exception {
+		primaryExecution();
+		String query = "update users set password = ? where email = ?";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setString(1, password);
+		ps.setString(2, email);
 		
+		int rowsAffected = ps.executeUpdate();
+		
+		if(rowsAffected > 0) { //means password changes
+			conn.close();
+			return true; 
+		}else {
+			conn.close();
+			return false;
+		}
 	}
 	
-	public UserModel loginUser(String email,String password) throws Exception{
+	public UserModel loginUser(String email,String password) throws Exception{ // for login button function
 		primaryExecution();
 		String query = "select * from users where email = ? and password = ?";
 		PreparedStatement ps = conn.prepareStatement(query);
@@ -54,6 +73,7 @@ public class DbConnection{
 		 
 		 if(rs.next()) {
 			 UserModel user = new UserModel(rs.getString("name"),rs.getString("email"),rs.getString("password"));
+			 user.setId(rs.getInt("id"));
 			 conn.close();
 			 return user;
 		 }

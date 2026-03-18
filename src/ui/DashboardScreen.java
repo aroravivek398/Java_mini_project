@@ -27,7 +27,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
     JLabel thisMonthValue;
     JLabel budgetLeftValue;
 
-    JPanel recentCard; // class-level rakha taaki refreshTransactions access kar sake
+    JPanel recentCard; 
 
     public DashboardScreen(UserModel user) {
         this.user = user;
@@ -352,12 +352,5 @@ public class DashboardScreen extends JFrame implements ActionListener {
         }
     }
 
-    /* ===================== MAIN ===================== */
-
-//    public static void main(String[] args) {
-//        SwingUtilities.invokeLater(() -> {
-//            UserModel testUser = new UserModel("Vivek", "vivek@example.com", "pass123");
-//            new DashboardScreen(testUser);
-//        });
-//    }
+    
 }

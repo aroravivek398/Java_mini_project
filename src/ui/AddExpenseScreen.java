@@ -3,6 +3,8 @@ package ui;
 import javax.swing.*;
 import javax.swing.border.*;
 
+import db.ExpenseDAO;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
@@ -10,6 +12,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import model.ExpenseModel;
 import model.UserModel;
 
 public class AddExpenseScreen extends JFrame implements ActionListener {
@@ -195,7 +198,7 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         buttonRow.add(saveButton);
         card.add(buttonRow);
 
-        /* ---- Add card to root ---- */
+        
         root.add(card);
 
         setVisible(true);
@@ -218,17 +221,32 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         if (e.getSource() == cancelButton) {
             dispose();
 
-        } else if (e.getSource() == saveButton) {
+        }   else if (e.getSource() == saveButton) {
             if (!validateForm()) return;
+            String category    = getSelectedCategory();
+            double amount      = Double.parseDouble(amountField.getText().trim());
+            
+            String[] parts = dateField.getText().trim().split("/");
+            String date    = parts[2] + "-" + parts[1] + "-" + parts[0];
+            
+            String description = descriptionField.getText().trim().equals("Optional note...") 
+                                 ? "" 
+                                 : descriptionField.getText().trim();
 
-            // TODO: DB mein save karo
-            // dashboard.refreshData(...);
-            // dashboard.refreshTransactions(...);
+            ExpenseModel expense = new ExpenseModel(user.getId(), date, category, amount, description);
 
-            JOptionPane.showMessageDialog(this,
-                    "Expense saved successfully!",
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
-            dispose();
+            try {
+                ExpenseDAO dao   = new ExpenseDAO();
+                boolean success  = dao.addExpense(expense);
+                if (success) {
+                    JOptionPane.showMessageDialog(this, "Expense saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    dispose();
+                } else {
+                    showError("Failed to save expense. Please try again!");
+                }
+            } catch (Exception ex) {
+                showError("DB Error: " + ex.getMessage());
+            }
         }
     }
 
@@ -348,7 +366,7 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         return btn;
     }
 
-
+    
 
     
 }

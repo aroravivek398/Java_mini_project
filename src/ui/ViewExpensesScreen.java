@@ -7,8 +7,10 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
+import java.util.ArrayList;
 import java.util.List;
 
+import db.ExpenseDAO;
 import model.ExpenseModel;
 import model.UserModel;
 
@@ -156,7 +158,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         pageTitle.setFont(new Font("SansSerif", Font.BOLD, 24));
         pageTitle.setForeground(TEXT_COLOR);
 
-        JLabel pageSub = new JLabel("Sorted by category");
+        JLabel pageSub = new JLabel("Sorted by date");
         pageSub.setFont(new Font("SansSerif", Font.PLAIN, 13));
         pageSub.setForeground(new Color(150, 150, 180));
 
@@ -216,8 +218,8 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         // tableWrapper mein dono — sirf ek dikhega ek waqt
         JPanel tableWrapper = new JPanel(new BorderLayout());
         tableWrapper.setOpaque(false);
-        tableWrapper.add(scrollPane,  BorderLayout.CENTER);
-        tableWrapper.add(emptyLabel,  BorderLayout.SOUTH);
+        tableWrapper.add(scrollPane, BorderLayout.CENTER);
+        tableWrapper.add(emptyLabel, BorderLayout.SOUTH);
 
         content.add(tableWrapper, BorderLayout.CENTER);
 
@@ -225,10 +227,25 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         add(sidebar,  BorderLayout.WEST);
         add(content,  BorderLayout.CENTER);
 
-        // Check at start — table empty hai toh emptyLabel dikhao
-        checkEmpty();
+        // DB se data load karo
+        loadFromDB();
 
         setVisible(true);
+    }
+
+    /* ===================== DB SE LOAD ===================== */
+
+    private void loadFromDB() {
+        try {
+            ExpenseDAO dao = new ExpenseDAO();
+            ArrayList<ExpenseModel> expenses = dao.getAllExpense(user.getId());
+            loadExpenses(expenses);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error loading expenses: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            checkEmpty();
+        }
     }
 
     /* ===================== EMPTY STATE CHECK ===================== */
@@ -241,21 +258,21 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         repaint();
     }
 
-    /* ===================== LOAD DATA (DB ready hone pe call karna) ===================== */
+    /* ===================== LOAD DATA ===================== */
 
-    public void loadExpenses(List<ExpenseModel> expenses) {
+    public void loadExpenses(ArrayList<ExpenseModel> expenses) {
         tableModel.setRowCount(0); // clear first
         int i = 1;
         for (ExpenseModel exp : expenses) {
             tableModel.addRow(new Object[]{
                 i++,
-                exp.getCategory(),
-                String.format("%.2f", exp.getAmount()),
-                exp.getDate(),
-                exp.getDescription()
+                exp.category,
+                String.format("%.2f", exp.amount),
+                exp.date,
+                exp.description
             });
         }
-        checkEmpty(); // automatically table ya empty label dikhega
+        checkEmpty();
     }
 
     /* ===================== TABLE STYLING ===================== */
@@ -295,8 +312,21 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
 
         if (e.getSource() == applyFilterButton) {
-           //
-        	JOptionPane.showMessageDialog(this, "Filter - Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
+            String selectedCat = (String) categoryFilter.getSelectedItem();
+            try {
+                ExpenseDAO dao = new ExpenseDAO();
+                ArrayList<ExpenseModel> filtered;
+                if ("All".equals(selectedCat)) {
+                    filtered = dao.getAllExpense(user.getId());
+                } else {
+                    filtered = dao.getExpenseWithCategory(user.getId(), selectedCat);
+                }
+                loadExpenses(filtered);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error applying filter: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
 
         } else if (e.getSource() == clearFilterButton) {
             categoryFilter.setSelectedIndex(0);
@@ -304,6 +334,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
             fromDateField.setForeground(new Color(200, 210, 255));
             toDateField.setText("DD/MM/YYYY");
             toDateField.setForeground(new Color(200, 210, 255));
+            loadFromDB(); // sab wapas load karo
 
         } else if (e.getSource() == editButton) {
             int selectedRow = expenseTable.getSelectedRow();
@@ -326,7 +357,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
             JOptionPane.showMessageDialog(this, "Delete Expense - Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
 
         } else if (e.getSource() == backButton) {
-            dispose(); // ye window band — dashboard wapas dikhega
+            dispose();
         }
     }
 
@@ -422,8 +453,4 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         btn.setPreferredSize(new Dimension(90, 36));
         return btn;
     }
-
-    
-
-   
 }
