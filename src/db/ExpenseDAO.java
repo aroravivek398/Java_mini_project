@@ -64,6 +64,7 @@ public class ExpenseDAO {
 		ArrayList<ExpenseModel> list = new ArrayList<ExpenseModel>();
 		while(rs.next()) {
 			ExpenseModel model = new ExpenseModel(rs.getInt("user_id"),rs.getString("date"),rs.getString("category"),rs.getDouble("amount"),rs.getString("descp"));
+			model.setId(rs.getInt("id"));
 			list.add(model);
 		}
 		ps.close();
@@ -81,7 +82,51 @@ public class ExpenseDAO {
         conn.close();
         return rows > 0;
     }
-	//updateExpense
-    //searchBydate
-    //getTotalexpense
+    public boolean updateExpense(int expenseId,ExpenseModel newexpense) throws Exception {
+        primaryExecution();
+        String query = "update expenses set date = ? , category = ? , amount = ? , descp = ? where id = ?";
+        PreparedStatement ps = conn.prepareStatement(query);
+        ps.setString(1, newexpense.date);
+        ps.setString(2, newexpense.category);
+        ps.setDouble(3, newexpense.amount);
+        ps.setString(4, newexpense.description);
+        ps.setInt(5, expenseId);
+
+        int rows = ps.executeUpdate();
+        ps.close();
+        conn.close();
+        return rows > 0;
+    }
+    public ArrayList<ExpenseModel> getExpenseWithDate(int userId, String date) throws Exception{
+		primaryExecution();
+		String query = "select * from expenses where user_id = ? and date = ? order by date desc";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setInt(1,userId);
+		ps.setString(2, date);
+		
+		ResultSet rs = ps.executeQuery();
+		ArrayList<ExpenseModel> list = new ArrayList<ExpenseModel>();
+		while(rs.next()) {
+			ExpenseModel model = new ExpenseModel(rs.getInt("user_id"),rs.getString("date"),rs.getString("category"),rs.getDouble("amount"),rs.getString("descp"));
+			model.setId(rs.getInt("id"));
+			list.add(model);
+		}
+		ps.close();
+		conn.close();
+		return list;
+	}
+    public double getTotalExpenses(int userId) throws Exception {
+    	primaryExecution();
+    	String query = "select sum(amount) as total from expenses where user_id = ?";
+    	PreparedStatement ps = conn.prepareStatement(query);
+    	ps.setInt(1,userId);
+    	ResultSet rs = ps.executeQuery();
+    	double total = 0;
+    	if(rs.next()) {
+			total = rs.getDouble("total");
+		}
+		ps.close();
+		conn.close();
+    	return total;
+    }
 }

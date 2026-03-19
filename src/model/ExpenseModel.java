@@ -1,6 +1,6 @@
 package model;
 public class ExpenseModel{
-		int id;
+		private int id;
 		public int user_id;
 		public String date;
 		public String category;
@@ -15,5 +15,12 @@ public class ExpenseModel{
 			this.category = category;
 			this.amount = amount;
 			this.description = desc;
+		}
+		
+		public void setId(int id) {
+			this.id = id;
+		}
+		public int getId(int id) {
+			return this.id;
 		}
 	}

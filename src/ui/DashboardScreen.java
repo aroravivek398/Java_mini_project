@@ -9,7 +9,6 @@ import java.awt.geom.RoundRectangle2D;
 
 import model.UserModel;
 import ui.Auth.LoginScreen;
-
 public class DashboardScreen extends JFrame implements ActionListener {
 
     private UserModel user;
@@ -151,7 +150,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
         statsRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         statsRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
-        totalExpenseValue = new JLabel("\u20B90.00");
+        totalExpenseValue = new JLabel();
         thisMonthValue    = new JLabel("\u20B90.00");
         budgetLeftValue   = new JLabel("\u20B90.00");
 
@@ -269,9 +268,9 @@ public class DashboardScreen extends JFrame implements ActionListener {
 
         if (e.getSource() == addExpenseButton) {
 
-            // TODO: new AddExpenseScreen(user);
-            // dispose();
-            JOptionPane.showMessageDialog(this, "Add Expense - Coming Soon!");
+             new AddExpenseScreen(user);
+             dispose();
+            //JOptionPane.showMessageDialog(this, "Add Expense - Coming Soon!");
 
         } else if (e.getSource() == viewExpensesButton) {
 
@@ -309,12 +308,5 @@ public class DashboardScreen extends JFrame implements ActionListener {
                 dispose();
             }
         }
-    }
-
-    /* ---------- Test ---------- */
-
-    public static void main(String[] args) {
-        UserModel testUser = new UserModel("Rahul", "rahul@example.com", "pass123");
-        new DashboardScreen(testUser);
     }
 }
