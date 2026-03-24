@@ -1,4 +1,5 @@
 package model;
+
 public class ExpenseModel{
 		private int id;
 		public int user_id;
@@ -23,4 +24,15 @@ public class ExpenseModel{
 		public int getId(int id) {
 			return this.id;
 		}
+
+		public String getAmount() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public String getCategory() {
+			// TODO Auto-generated method stub
+			return null;
+		}
 	}
+

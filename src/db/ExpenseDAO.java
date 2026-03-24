@@ -1,3 +1,4 @@
+
 package db;
 import java.sql.*;
 import java.util.ArrayList;
@@ -71,6 +72,7 @@ public class ExpenseDAO {
 		conn.close();
 		return list;
 	}
+	
     public boolean deleteExpense(int expenseId) throws Exception {
         primaryExecution();
         String query = "DELETE FROM expenses WHERE id = ?";
@@ -130,3 +132,4 @@ public class ExpenseDAO {
     	return total;
     }
 }
+

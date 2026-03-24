@@ -212,8 +212,12 @@ public class LoginScreen extends JFrame implements ActionListener {
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage());
             }
+
+        }
+        
+
     }
-    }
+    
     public static void main(String[] args) {
         new LoginScreen();
     }
