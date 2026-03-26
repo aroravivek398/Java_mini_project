@@ -48,6 +48,7 @@ public class ExpenseDAO {
 		
 		while(rs.next()) {
 			ExpenseModel model = new ExpenseModel(rs.getInt("user_id"),rs.getString("date"),rs.getString("category"),rs.getDouble("amount"),rs.getString("descp"));
+			model.setId(rs.getInt("id"));
 			list.add(model);
 		}
 		ps.close();
@@ -131,5 +132,6 @@ public class ExpenseDAO {
 		conn.close();
     	return total;
     }
+    
 }
 

@@ -18,6 +18,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
     private DashboardScreen dashboard;
     private UserModel user;
+    ExpenseDAO dao = new ExpenseDAO();
 
     // Filters
     private JComboBox<String> categoryFilter;
@@ -237,7 +238,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
     private void loadFromDB() {
         try {
-            ExpenseDAO dao = new ExpenseDAO();
             ArrayList<ExpenseModel> expenses = dao.getAllExpense(user.getId());
             loadExpenses(expenses);
         } catch (Exception ex) {
@@ -354,7 +354,22 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                         "No Selection", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            JOptionPane.showMessageDialog(this, "Delete Expense - Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
+//            JOptionPane.showMessageDialog(this, "Delete Expense - Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
+            try {
+            	int expenseId = dao.getAllExpense(user.getId()).get(selectedRow).getId();
+				boolean isdeleted = dao.deleteExpense(expenseId);
+				if(isdeleted) {
+					ArrayList<ExpenseModel> updated;
+					updated = dao.getAllExpense(user.getId());
+					loadExpenses(updated);
+					JOptionPane.showMessageDialog(this, "Deleted Successfully", "Successfull Deletion", JOptionPane.INFORMATION_MESSAGE);
+				}else {
+					JOptionPane.showMessageDialog(this, "Not Deleted", "Unsuccessfull Deletion", JOptionPane.INFORMATION_MESSAGE);
+				}
+
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
 
         } else if (e.getSource() == backButton) {
             dispose();
