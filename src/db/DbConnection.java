@@ -16,16 +16,13 @@ public class DbConnection{
 	    String name     = user.name;
 	    String email    = user.email;
 	    String password = user.password;
-
 	    String query = "insert into users(name, email, password) values (?, ?, ?)";
 	    PreparedStatement ps = conn.prepareStatement(query);
 	    ps.setString(1, name);
 	    ps.setString(2, email);
 	    ps.setString(3, password);
-
 	    int rowsAffected = ps.executeUpdate();
 	    conn.close();
-
 	    return rowsAffected > 0; 
 	}
 	public boolean emailExists(String email) throws Exception {

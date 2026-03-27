@@ -31,6 +31,10 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
     private JScrollPane scrollPane;
     private JLabel emptyLabel;
 
+
+    // ✅ Expense IDs store karne ke liye — row index se id milegi
+    private ArrayList<Integer> expenseIds = new ArrayList<>();
+
     // Action buttons
     private JButton editButton;
     private JButton deleteButton;
@@ -93,7 +97,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         sidebar.add(filterTitle);
         sidebar.add(Box.createVerticalStrut(16));
 
-        // Category filter
         sidebar.add(createSidebarLabel("Category"));
         sidebar.add(Box.createVerticalStrut(6));
         String[] cats = {"All", "Food", "Transport", "Shopping", "Bills", "Health", "Other"};
@@ -106,14 +109,12 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         sidebar.add(categoryFilter);
         sidebar.add(Box.createVerticalStrut(16));
 
-        // From date
         sidebar.add(createSidebarLabel("From Date (DD/MM/YYYY)"));
         sidebar.add(Box.createVerticalStrut(6));
         fromDateField = createSidebarTextField("DD/MM/YYYY");
         sidebar.add(fromDateField);
         sidebar.add(Box.createVerticalStrut(12));
 
-        // To date
         sidebar.add(createSidebarLabel("To Date (DD/MM/YYYY)"));
         sidebar.add(Box.createVerticalStrut(6));
         toDateField = createSidebarTextField("DD/MM/YYYY");
@@ -143,7 +144,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         content.setLayout(new BorderLayout());
         content.setBorder(new EmptyBorder(30, 30, 30, 30));
 
-        // Title row
         JPanel titleRow = new JPanel(new BorderLayout());
         titleRow.setOpaque(false);
         titleRow.setBorder(new EmptyBorder(0, 0, 18, 0));
@@ -164,7 +164,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         titleText.add(Box.createVerticalStrut(3));
         titleText.add(pageSub);
 
-        // Edit + Delete buttons
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actionPanel.setOpaque(false);
 
@@ -218,7 +217,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
         content.add(tableWrapper, BorderLayout.CENTER);
 
-        /* ===================== ASSEMBLE ===================== */
         add(sidebar,  BorderLayout.WEST);
         add(content,  BorderLayout.CENTER);
 
@@ -257,22 +255,30 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
     public void loadExpenses(ArrayList<ExpenseModel> expenses) {
         tableModel.setRowCount(0);
+
+        expenseIds.clear(); // ✅ pehle clear karo
+
         int i = 1;
         for (ExpenseModel exp : expenses) {
             tableModel.addRow(new Object[]{
                 i++,
                 exp.category,
                 String.format("%.2f", exp.amount),
+
                 formatDate(exp.date),   // ✅ FIX: YYYY-MM-DD → DD/MM/YYYY
+
+                formatDate(exp.date),
+
                 exp.description
             });
+            expenseIds.add(exp.getId()); // ✅ har row ka id save karo
         }
         checkEmpty();
     }
 
     /* ===================== DATE HELPERS ===================== */
 
-    // ✅ DB format YYYY-MM-DD → display format DD/MM/YYYY
+
     private String formatDate(String date) {
         try {
             String[] parts = date.split("-");
@@ -282,7 +288,8 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         }
     }
 
-    // ✅ Display format DD/MM/YYYY → DB format YYYY-MM-DD
+
+
     private String convertToDBDate(String displayDate) {
         try {
             String[] parts = displayDate.split("/");
@@ -342,12 +349,16 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                 ArrayList<ExpenseModel> filtered;
 
                 if (dateFilter) {
+
                     // ✅ FIX: DD/MM/YYYY → YYYY-MM-DD convert karke DB mein query karo
                     String fromDB = convertToDBDate(from);
                     String toDB   = convertToDBDate(to);
                     filtered = dao.searchByDate(user.getId(), fromDB, toDB);
 
                     // Category bhi apply karo agar select hai
+
+                    filtered = dao.searchByDate(user.getId(), fromDB, toDB);
+
                     if (catFilter) {
                         filtered.removeIf(exp -> !exp.category.equalsIgnoreCase(selectedCat));
                     }
@@ -381,7 +392,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                         "No Selection", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            JOptionPane.showMessageDialog(this, "Edit Expense - Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
+            
 
         } else if (e.getSource() == deleteButton) {
             int selectedRow = expenseTable.getSelectedRow();
@@ -391,24 +402,32 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                         "No Selection", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+            
+//            JOptionPane.showMessageDialog(this, "Delete Expense - Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
+            try {
+            	ExpenseDAO dao=new ExpenseDAO();
+				int expenseId = dao.getAllExpense(user.getId()).get(selectedRow).getId();
+			
+				boolean isdeleted = dao.deleteExpense(expenseId);
+				if(isdeleted) {
+					ArrayList<ExpenseModel> updated;
+					updated = dao.getAllExpense(user.getId());
+					loadExpenses(updated);
+					JOptionPane.showMessageDialog(this, "Deleted Successfully", "Successfull Deletion", JOptionPane.INFORMATION_MESSAGE);
+				}else {
+					JOptionPane.showMessageDialog(this, "Not Deleted", "Unsuccessfull Deletion", JOptionPane.INFORMATION_MESSAGE);
+				}
 
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "Kya aap sure hain? Ye expense delete ho jaayega!",
-                    "Delete Confirm", JOptionPane.YES_NO_OPTION);
-
-            if (confirm == JOptionPane.YES_OPTION) {
-                // ✅ Sr. No. column se row number nikalo aur delete karo
-                // Note: Tumhare tableModel mein id store nahi hai abhi
-                // Jab edit/delete implement karoge tab ExpenseModel ka id store karna hoga
-                JOptionPane.showMessageDialog(this, "Delete - Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
-            }
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
 
         } else if (e.getSource() == backButton) {
             dispose();
         }
     }
 
-    /* ===================== HELPERS ===================== */
+    /* ===================== HELPER METHODS ===================== */
 
     private JLabel createSidebarLabel(String text) {
         JLabel lbl = new JLabel(text);

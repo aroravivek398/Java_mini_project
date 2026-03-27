@@ -185,8 +185,11 @@ public class LoginScreen extends JFrame implements ActionListener {
 
         if (e.getSource() == loginButton) {
 
-            String email    = emailField.getText().trim();
-            String password = new String(passwordField.getPassword());
+           // String email    = emailField.getText().trim();
+        	String email= "swarnabha@test.com";
+        	
+           // String password = new String(passwordField.getPassword());
+        	String password ="test123";
 
             if (Validator.isEmpty(email) || Validator.isEmpty(password)) {
                 JOptionPane.showMessageDialog(this, "Fields cannot be empty");

@@ -182,6 +182,9 @@ public class BudgetScreen extends JFrame implements ActionListener {
         /* ---- Two column layout: Input | Summary ---- */
         JPanel mainRow = new JPanel(new GridLayout(1, 2, 20, 0));
         mainRow.setOpaque(false);
+        JScrollPane scrollPane = new JScrollPane(mainRow);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         /* ---- LEFT: Budget Input Card ---- */
         JPanel inputCard = createCard();
@@ -282,7 +285,7 @@ public class BudgetScreen extends JFrame implements ActionListener {
         mainRow.add(inputCard);
         mainRow.add(summaryPanel);
 
-        content.add(mainRow, BorderLayout.CENTER);
+        content.add(scrollPane, BorderLayout.CENTER);
 
         /* ===================== ASSEMBLE ===================== */
         add(sidebar, BorderLayout.WEST);
@@ -379,7 +382,7 @@ public class BudgetScreen extends JFrame implements ActionListener {
             billsSpent     = expenseDao.getMonthlyExpenseByCategory(user.getId(), "bills",     selectedMonth, selectedYear);
             healthSpent    = expenseDao.getMonthlyExpenseByCategory(user.getId(), "health",    selectedMonth, selectedYear);
             otherSpent     = expenseDao.getMonthlyExpenseByCategory(user.getId(), "other",     selectedMonth, selectedYear);
-            totalSpent     = expenseDao.getThisMonthTotal(user.getId());
+            totalSpent = expenseDao.getMonthlyTotal(user.getId(), selectedMonth, selectedYear);
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,

@@ -84,7 +84,7 @@ public class BudgetDAO {
         return budget; // null return hoga agar budget set nahi hua
     }
 
-    // Budget Left calculate karo
+
     public double getBudgetLeft(int userId) throws Exception {
         BudgetModel budget = getCurrentBudget(userId);
         if (budget == null) return 0; // budget set hi nahi hua

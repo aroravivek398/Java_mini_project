@@ -47,7 +47,9 @@ public class ExpenseDAO {
                 rs.getDouble("amount"),
                 rs.getString("descp")
             );
+            model.setId(rs.getInt("id"));
             list.add(model);
+           
         }
         ps.close();
         conn.close();
@@ -117,6 +119,24 @@ public class ExpenseDAO {
         conn.close();
         return total;
     }
+    public double getMonthlyTotal(int userId, int month, int year) throws Exception {
+        primaryExecution();
+
+        String query = "SELECT COALESCE(SUM(amount), 0) FROM expenses " +
+                       "WHERE user_id = ? AND MONTH(date) = ? AND YEAR(date) = ?";
+
+        PreparedStatement ps = conn.prepareStatement(query);
+        ps.setInt(1, userId);
+        ps.setInt(2, month);
+        ps.setInt(3, year);
+
+        ResultSet rs = ps.executeQuery();
+        double total = rs.next() ? rs.getDouble(1) : 0;
+
+        ps.close();
+        conn.close();
+        return total;
+    }
 
     // ===================== CATEGORY WISE MONTHLY EXPENSE =====================
     public double getMonthlyExpenseByCategory(int userId, String category, int month, int year) throws Exception {
@@ -148,12 +168,14 @@ public class ExpenseDAO {
         ArrayList<ExpenseModel> list = new ArrayList<>();
         while (rs.next()) {
             ExpenseModel model = new ExpenseModel(
+            	
                 rs.getInt("user_id"),
                 rs.getString("date"),
                 rs.getString("category"),
                 rs.getDouble("amount"),
                 rs.getString("descp")
             );
+            model.setId(rs.getInt("id"));
             list.add(model);
         }
         ps.close();

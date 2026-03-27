@@ -33,6 +33,8 @@ public class DashboardScreen extends JFrame implements ActionListener {
     JLabel thisMonthValue;
     JLabel budgetLeftValue;
 
+    JComboBox<Integer> txnLimitSelector;
+
     JPanel recentCard;
 
     public DashboardScreen(UserModel user) {
@@ -165,7 +167,31 @@ public class DashboardScreen extends JFrame implements ActionListener {
         content.add(statsRow);
         content.add(Box.createVerticalStrut(20));
 
-        /* ---- Recent Transactions ---- */
+        /* ---- Txn Header Row (title + dropdown) ---- */
+        JPanel txnHeaderRow = new JPanel(new BorderLayout());
+        txnHeaderRow.setOpaque(false);
+        txnHeaderRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        txnHeaderRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+
+        JLabel txnTitle = new JLabel("Recent Transactions");
+        txnTitle.setFont(new Font("SansSerif", Font.BOLD, 15));
+        txnTitle.setForeground(new Color(40, 40, 40));
+
+        Integer[] limits = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        txnLimitSelector = new JComboBox<>(limits);
+        txnLimitSelector.setSelectedItem(5);
+        txnLimitSelector.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txnLimitSelector.setPreferredSize(new Dimension(70, 28));
+        txnLimitSelector.setFocusable(false);
+        txnLimitSelector.addActionListener(this);
+
+        txnHeaderRow.add(txnTitle, BorderLayout.WEST);
+        txnHeaderRow.add(txnLimitSelector, BorderLayout.EAST);
+
+        content.add(txnHeaderRow);
+        content.add(Box.createVerticalStrut(8));
+
+        /* ---- Recent Transactions Card ---- */
         recentCard = new JPanel(new BorderLayout());
         recentCard.setBackground(Color.WHITE);
         recentCard.setBorder(new CompoundBorder(
@@ -175,44 +201,37 @@ public class DashboardScreen extends JFrame implements ActionListener {
         recentCard.setAlignmentX(Component.LEFT_ALIGNMENT);
         recentCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
-        JLabel recentTitle = new JLabel("Recent Transactions");
-        recentTitle.setFont(new Font("SansSerif", Font.BOLD, 15));
-        recentTitle.setForeground(new Color(40, 40, 40));
-
-        JLabel noData = new JLabel("No transactions yet. Click 'Add Expense' to get started.");
-        noData.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        noData.setForeground(new Color(170, 170, 190));
-        noData.setHorizontalAlignment(SwingConstants.CENTER);
-
-        recentCard.add(recentTitle, BorderLayout.NORTH);
-        recentCard.add(noData, BorderLayout.CENTER);
-
         content.add(recentCard);
 
         /* ===================== ASSEMBLE ===================== */
-        add(sidebar,  BorderLayout.WEST);
-        add(content,  BorderLayout.CENTER);
+        add(sidebar, BorderLayout.WEST);
+        add(content, BorderLayout.CENTER);
 
         setVisible(true);
 
-        // ✅ FIX: Screen open hote hi real data load karo
         loadDashboardData();
     }
 
     /* ===================== LOAD DASHBOARD DATA ===================== */
 
-    // ✅ Ek jagah se saara data load — constructor aur dashboard button dono yahi call karenge
     public void loadDashboardData() {
         try {
             double total      = expenseDao.getTotalExpense(user.getId());
             double month      = expenseDao.getThisMonthTotal(user.getId());
             double budgetLeft = budgetDao.getBudgetLeft(user.getId());
 
-            // ✅ FIX: proper formatting — ₹1234.56
             refreshData(total, month, budgetLeft);
 
-            ArrayList<ExpenseModel> expenses = expenseDao.getAllExpense(user.getId());
-            refreshTransactions(expenses);
+            // ✅ FIX: duplicate variable hataya — sirf ek baar getAllExpense call
+            ArrayList<ExpenseModel> allExpenses = expenseDao.getAllExpense(user.getId());
+            int limit = (txnLimitSelector != null) ? (int) txnLimitSelector.getSelectedItem() : 5;
+
+            ArrayList<ExpenseModel> limited = new ArrayList<>();
+            for (int i = 0; i < Math.min(limit, allExpenses.size()); i++) {
+                limited.add(allExpenses.get(i));
+            }
+
+            refreshTransactions(limited);
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
@@ -224,7 +243,6 @@ public class DashboardScreen extends JFrame implements ActionListener {
     /* ===================== REFRESH METHODS ===================== */
 
     public void refreshData(double total, double month, double budget) {
-        // ✅ FIX: String.format se proper 2 decimal places
         totalExpenseValue.setText(String.format("\u20B9%.2f", total));
         thisMonthValue.setText(String.format("\u20B9%.2f", month));
         budgetLeftValue.setText(String.format("\u20B9%.2f", budget));
@@ -232,11 +250,6 @@ public class DashboardScreen extends JFrame implements ActionListener {
 
     public void refreshTransactions(List<ExpenseModel> expenses) {
         recentCard.removeAll();
-
-        JLabel recentTitle = new JLabel("Recent Transactions");
-        recentTitle.setFont(new Font("SansSerif", Font.BOLD, 15));
-        recentTitle.setForeground(new Color(40, 40, 40));
-        recentCard.add(recentTitle, BorderLayout.NORTH);
 
         if (expenses == null || expenses.isEmpty()) {
             JLabel noData = new JLabel("No transactions yet. Click 'Add Expense' to get started.");
@@ -250,24 +263,52 @@ public class DashboardScreen extends JFrame implements ActionListener {
             listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
             listPanel.setBackground(Color.WHITE);
 
+            // ---- Column Headers ----
+            JPanel headerRow = new JPanel(new GridLayout(1, 3));
+            headerRow.setBackground(new Color(245, 246, 252));
+            headerRow.setBorder(new EmptyBorder(4, 0, 8, 0));
+            headerRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+            String[] cols = {"Category", "Date", "Amount"};
+            for (String col : cols) {
+                JLabel h = new JLabel(col);
+                h.setFont(new Font("SansSerif", Font.BOLD, 12));
+                h.setForeground(new Color(120, 120, 140));
+                if (col.equals("Amount")) h.setHorizontalAlignment(SwingConstants.RIGHT);
+                if (col.equals("Date"))   h.setHorizontalAlignment(SwingConstants.CENTER);
+                headerRow.add(h);
+            }
+            listPanel.add(headerRow);
+
+            JSeparator headerSep = new JSeparator();
+            headerSep.setForeground(new Color(210, 210, 225));
+            headerSep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+            listPanel.add(headerSep);
+
+            // ---- Data Rows ----
             for (ExpenseModel exp : expenses) {
-                JPanel row = new JPanel(new BorderLayout());
+                JPanel row = new JPanel(new GridLayout(1, 3));
                 row.setBackground(Color.WHITE);
-                row.setBorder(new EmptyBorder(8, 0, 8, 0));
-                row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+                row.setBorder(new EmptyBorder(10, 0, 10, 0));
+                row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
 
-                // ✅ FIX: category aur date dono dikhao
-                JLabel nameLabel = new JLabel(exp.getCategory() + "  •  " + exp.getDate());
-                nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
-                nameLabel.setForeground(new Color(40, 40, 40));
+                JLabel categoryLabel = new JLabel(exp.getCategory());
+                categoryLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+                categoryLabel.setForeground(new Color(40, 40, 40));
 
-                // ✅ FIX: proper formatting — null nahi aayega ab
+                JLabel dateLabel = new JLabel(exp.getDate());
+                dateLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+                dateLabel.setForeground(new Color(130, 130, 150));
+                dateLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
                 JLabel amountLabel = new JLabel(String.format("\u20B9%.2f", exp.getAmount()));
                 amountLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
                 amountLabel.setForeground(new Color(220, 70, 100));
+                amountLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
-                row.add(nameLabel,   BorderLayout.WEST);
-                row.add(amountLabel, BorderLayout.EAST);
+                row.add(categoryLabel);
+                row.add(dateLabel);
+                row.add(amountLabel);
                 listPanel.add(row);
 
                 JSeparator sep = new JSeparator();
@@ -373,8 +414,21 @@ public class DashboardScreen extends JFrame implements ActionListener {
         } else if (e.getSource() == budgetButton) {
             new BudgetScreen(this, user);
         } else if (e.getSource() == dashboardButton) {
-            // ✅ FIX: hardcoded values nahi — real DB data
             loadDashboardData();
+        } else if (e.getSource() == txnLimitSelector) {
+            // ✅ Dropdown change hone pe transactions reload
+            try {
+                int limit = (int) txnLimitSelector.getSelectedItem();
+                ArrayList<ExpenseModel> all = expenseDao.getAllExpense(user.getId());
+                ArrayList<ExpenseModel> filtered = new ArrayList<>();
+                for (int i = 0; i < Math.min(limit, all.size()); i++) {
+                    filtered.add(all.get(i));
+                }
+                refreshTransactions(filtered);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         } else if (e.getSource() == logoutButton) {
             int confirm = JOptionPane.showConfirmDialog(
                     this, "Are you sure you want to logout?",
