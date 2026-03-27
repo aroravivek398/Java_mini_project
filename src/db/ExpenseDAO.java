@@ -30,7 +30,6 @@ public class ExpenseDAO {
         return rowsAffected > 0;
     }
 
-
     // ===================== GET ALL EXPENSES =====================
     public ArrayList<ExpenseModel> getAllExpense(int userId) throws Exception {
         primaryExecution();
@@ -81,7 +80,6 @@ public class ExpenseDAO {
     }
 
     // ===================== DELETE EXPENSE =====================
-
     public boolean deleteExpense(int expenseId) throws Exception {
         primaryExecution();
         String query = "DELETE FROM expenses WHERE id = ?";
@@ -92,7 +90,6 @@ public class ExpenseDAO {
         conn.close();
         return rows > 0;
     }
-
 
     // ===================== TOTAL OF ALL TIME =====================
     public double getTotalExpense(int userId) throws Exception {

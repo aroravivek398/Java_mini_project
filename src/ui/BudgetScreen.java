@@ -186,13 +186,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
         /* ---- LEFT: Budget Input Card ---- */
         JPanel inputCard = createCard();
         inputCard.setLayout(new BoxLayout(inputCard, BoxLayout.Y_AXIS));
-        JScrollPane inputScroll = new JScrollPane(inputCard);
-        inputScroll.setBorder(null);
-        inputScroll.setOpaque(false);
-        inputScroll.getViewport().setOpaque(false);
-        inputScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        inputScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        inputScroll.getVerticalScrollBar().setUnitIncrement(12);
 
         JLabel inputTitle = new JLabel("Set Budget (\u20B9)");
         inputTitle.setFont(new Font("SansSerif", Font.BOLD, 16));
@@ -286,7 +279,7 @@ public class BudgetScreen extends JFrame implements ActionListener {
         summaryPanel.add(Box.createVerticalStrut(10));
         summaryPanel.add(summaryHint);
 
-        mainRow.add(inputScroll);  // inputCard ki jagah inputScroll add karo
+        mainRow.add(inputCard);
         mainRow.add(summaryPanel);
 
         content.add(mainRow, BorderLayout.CENTER);

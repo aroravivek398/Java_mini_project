@@ -3,17 +3,24 @@ package ui;
 import javax.swing.*;
 import javax.swing.border.*;
 
+import db.BudgetDAO;
+import db.ExpenseDAO;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
+import java.util.ArrayList;
 import java.util.List;
 
 import model.ExpenseModel;
 import model.UserModel;
 import ui.Auth.LoginScreen;
+
 public class DashboardScreen extends JFrame implements ActionListener {
 
     private UserModel user;
+    private ExpenseDAO expenseDao;
+    private BudgetDAO budgetDao;
 
     JButton dashboardButton;
     JButton addExpenseButton;
@@ -26,10 +33,12 @@ public class DashboardScreen extends JFrame implements ActionListener {
     JLabel thisMonthValue;
     JLabel budgetLeftValue;
 
-    JPanel recentCard; 
+    JPanel recentCard;
 
     public DashboardScreen(UserModel user) {
         this.user = user;
+        this.expenseDao = new ExpenseDAO();
+        this.budgetDao  = new BudgetDAO();
 
         setTitle("Dashboard");
         setSize(900, 600);
@@ -145,7 +154,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
         statsRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         statsRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
-        totalExpenseValue = new JLabel();
+        totalExpenseValue = new JLabel("\u20B90.00");
         thisMonthValue    = new JLabel("\u20B90.00");
         budgetLeftValue   = new JLabel("\u20B90.00");
 
@@ -185,20 +194,44 @@ public class DashboardScreen extends JFrame implements ActionListener {
         add(content,  BorderLayout.CENTER);
 
         setVisible(true);
+
+        // ✅ FIX: Screen open hote hi real data load karo
+        loadDashboardData();
+    }
+
+    /* ===================== LOAD DASHBOARD DATA ===================== */
+
+    // ✅ Ek jagah se saara data load — constructor aur dashboard button dono yahi call karenge
+    public void loadDashboardData() {
+        try {
+            double total      = expenseDao.getTotalExpense(user.getId());
+            double month      = expenseDao.getThisMonthTotal(user.getId());
+            double budgetLeft = budgetDao.getBudgetLeft(user.getId());
+
+            // ✅ FIX: proper formatting — ₹1234.56
+            refreshData(total, month, budgetLeft);
+
+            ArrayList<ExpenseModel> expenses = expenseDao.getAllExpense(user.getId());
+            refreshTransactions(expenses);
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error loading dashboard data: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /* ===================== REFRESH METHODS ===================== */
 
-    // Stat cards update karne ke liye — AddExpenseScreen ya DB se call karo
     public void refreshData(double total, double month, double budget) {
-        totalExpenseValue.setText("\u20B9" + total);
-        thisMonthValue.setText("\u20B9" + month);
-        budgetLeftValue.setText("\u20B9" + budget);
+        // ✅ FIX: String.format se proper 2 decimal places
+        totalExpenseValue.setText(String.format("\u20B9%.2f", total));
+        thisMonthValue.setText(String.format("\u20B9%.2f", month));
+        budgetLeftValue.setText(String.format("\u20B9%.2f", budget));
     }
 
-    // Recent transactions update karne ke liye — AddExpenseScreen ya DB se call karo
     public void refreshTransactions(List<ExpenseModel> expenses) {
-        recentCard.removeAll(); // purane components hata do
+        recentCard.removeAll();
 
         JLabel recentTitle = new JLabel("Recent Transactions");
         recentTitle.setFont(new Font("SansSerif", Font.BOLD, 15));
@@ -223,11 +256,13 @@ public class DashboardScreen extends JFrame implements ActionListener {
                 row.setBorder(new EmptyBorder(8, 0, 8, 0));
                 row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
-                JLabel nameLabel = new JLabel(exp.getCategory());
+                // ✅ FIX: category aur date dono dikhao
+                JLabel nameLabel = new JLabel(exp.getCategory() + "  •  " + exp.getDate());
                 nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
                 nameLabel.setForeground(new Color(40, 40, 40));
 
-                JLabel amountLabel = new JLabel("\u20B9" + exp.getAmount());
+                // ✅ FIX: proper formatting — null nahi aayega ab
+                JLabel amountLabel = new JLabel(String.format("\u20B9%.2f", exp.getAmount()));
                 amountLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
                 amountLabel.setForeground(new Color(220, 70, 100));
 
@@ -247,8 +282,8 @@ public class DashboardScreen extends JFrame implements ActionListener {
             recentCard.add(scrollPane, BorderLayout.CENTER);
         }
 
-        recentCard.revalidate(); // layout recalculate karo
-        recentCard.repaint();    // screen pe draw karo
+        recentCard.revalidate();
+        recentCard.repaint();
     }
 
     /* ===================== HELPER METHODS ===================== */
@@ -330,15 +365,16 @@ public class DashboardScreen extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == addExpenseButton) {
-            new AddExpenseScreen(this,user);
+            new AddExpenseScreen(this, user);
         } else if (e.getSource() == viewExpensesButton) {
-            new ViewExpensesScreen(this,user);
+            new ViewExpensesScreen(this, user);
         } else if (e.getSource() == analysisButton) {
-            JOptionPane.showMessageDialog(this, "Analysis - Coming Soon!");
+            new AnalysisScreen(this, user);
         } else if (e.getSource() == budgetButton) {
-            JOptionPane.showMessageDialog(this, "Budget - Coming Soon!");
+            new BudgetScreen(this, user);
         } else if (e.getSource() == dashboardButton) {
-            JOptionPane.showMessageDialog(this, "You are already on Dashboard!");
+            // ✅ FIX: hardcoded values nahi — real DB data
+            loadDashboardData();
         } else if (e.getSource() == logoutButton) {
             int confirm = JOptionPane.showConfirmDialog(
                     this, "Are you sure you want to logout?",
