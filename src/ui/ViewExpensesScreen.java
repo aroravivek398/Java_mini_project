@@ -355,8 +355,8 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                 return;
             }
 //            JOptionPane.showMessageDialog(this, "Delete Expense - Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
-            try {
-            	int expenseId = dao.getAllExpense(user.getId()).get(selectedRow).getId();
+            try {     	
+            	int expenseId = dao.getAllExpense(user.getId()).get(selectedRow).getId(); 
 				boolean isdeleted = dao.deleteExpense(expenseId);
 				if(isdeleted) {
 					ArrayList<ExpenseModel> updated;

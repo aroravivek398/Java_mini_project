@@ -223,11 +223,11 @@ public class DashboardScreen extends JFrame implements ActionListener {
                 row.setBorder(new EmptyBorder(8, 0, 8, 0));
                 row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
-                JLabel nameLabel = new JLabel(exp.getCategory());
+                JLabel nameLabel = new JLabel(exp.category);
                 nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
                 nameLabel.setForeground(new Color(40, 40, 40));
 
-                JLabel amountLabel = new JLabel("\u20B9" + exp.getAmount());
+                JLabel amountLabel = new JLabel("\u20B9" + exp.amount);
                 amountLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
                 amountLabel.setForeground(new Color(220, 70, 100));
 

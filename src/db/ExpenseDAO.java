@@ -55,6 +55,7 @@ public class ExpenseDAO {
 		conn.close();
 		return list;
 	}
+	
 	public ArrayList<ExpenseModel> getExpenseWithCategory(int userId, String category) throws Exception{
 		primaryExecution();
 		String query = "select * from expenses where user_id = ? and category = ? order by date desc";

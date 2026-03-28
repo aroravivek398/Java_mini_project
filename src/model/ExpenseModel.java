@@ -25,14 +25,5 @@ public class ExpenseModel{
 			return this.id;
 		}
 
-		public String getAmount() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public String getCategory() {
-			// TODO Auto-generated method stub
-			return null;
-		}
 	}
 
