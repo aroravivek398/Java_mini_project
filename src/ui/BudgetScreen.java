@@ -297,18 +297,16 @@ public class BudgetScreen extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    /* ===================== PREFILL EXISTING BUDGET ===================== */
 
     // ✅ DB se current month ka budget fetch karke fields mein fill karo
     private void prefillExistingBudget() {
         try {
             BudgetDAO budgetDao = new BudgetDAO();
-            BudgetModel existing = budgetDao.getCurrentBudget(user.getId());
+            BudgetModel existing = budgetDao.getCurrentBudget(user.getId()); 
             if (existing != null) {
-                setFieldValue(totalBudgetField, "e.g. 10000", existing.getMonthlyBudget());
+                setFieldValue(totalBudgetField, "e.g. 10000", existing.budget_amount);
             }
         } catch (Exception ex) {
-            // Prefill fail hone pe silently skip karo — user manually enter kar lega
             ex.printStackTrace();
         }
     }
@@ -362,8 +360,8 @@ public class BudgetScreen extends JFrame implements ActionListener {
 
         // ✅ FIX 2: Budget DB mein save karo
         try {
-            BudgetModel budget = new BudgetModel(user.getId(), totalBudget, selectedMonth, selectedYear);
-            new BudgetDAO().setBudget(budget);
+            BudgetModel budget = new BudgetModel(user.getId(), selectedMonth, selectedYear,totalBudget);
+            new BudgetDAO().setBudget(user.getId(),budget);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Error saving budget: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

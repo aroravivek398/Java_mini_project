@@ -6,24 +6,7 @@ import java.util.ArrayList;
 import model.BudgetModel;
 import util.DbUtils;
 public class BudgetDAO {
-	
-	public static void main(String[] args) throws Exception {
-		BudgetDAO bg = new BudgetDAO();
 
-		// Test 1 - getBudget
-		System.out.println(bg.getBudget(1).get(0).budget_amount);
-
-		// Test 2 - setBudget
-		BudgetModel model = new BudgetModel(1, 4, 2026, 50000);
-		System.out.println(bg.setBudget(1, model));
-
-		// Test 3 - isBudgetExceeded
-		System.out.println(bg.isBudgetExceeded(1, 3, 2026));
-
-		// Test 4 - getRemainingBudget
-		System.out.println(bg.getRemainingBudget(1, 3, 2026));
-	}
-	
 	private String dirverName = "com.mysql.cj.jdbc.Driver";
 	private Connection conn;
 	private LocalDate today = LocalDate.now();
@@ -62,7 +45,6 @@ public class BudgetDAO {
 		}
 	}
 	
-	//getRemainingBudget
 	public ArrayList<BudgetModel> getBudget(int user_id) throws Exception {
 		primaryExecution();
 		String query = "select * from budgets where user_id = ?";
@@ -78,6 +60,24 @@ public class BudgetDAO {
 	    ps.close();
 	    conn.close();
 	    return list;
+	}
+	
+	public BudgetModel getCurrentBudget(int user_id) throws Exception {
+		primaryExecution();
+		String query = "select * from budgets where user_id = ? and month = ? and year = ?";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setInt(1, user_id);
+		ps.setInt(2, this.month);
+		ps.setInt(3, this.year);
+		ResultSet rs = ps.executeQuery();
+		BudgetModel model = null;
+		if(rs.next()) {
+			model = new BudgetModel(rs.getInt("user_id"),rs.getInt("month"),rs.getInt("year"),rs.getDouble("budget_amount"));
+			model.setId(rs.getInt("id"));
+		}
+		 ps.close();
+		    conn.close();
+		return model;
 	}
 	
 	public boolean setBudget(int user_id, BudgetModel model) throws Exception{
@@ -164,4 +164,6 @@ public class BudgetDAO {
 		conn.close();
 		return budgetAmount - totalSpent;
 	}
+
+
 }
