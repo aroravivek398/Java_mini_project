@@ -8,7 +8,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
-import java.util.List;
 
 import db.ExpenseDAO;
 import model.ExpenseModel;
@@ -18,7 +17,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
     private DashboardScreen dashboard;
     private UserModel user;
-    ExpenseDAO dao = new ExpenseDAO();
 
     // Filters
     private JComboBox<String> categoryFilter;
@@ -30,19 +28,22 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
     // Table
     private JTable expenseTable;
     private DefaultTableModel tableModel;
-    private JScrollPane scrollPane;  // class-level
-    private JLabel emptyLabel;       // class-level
+    private JScrollPane scrollPane;
+    private JLabel emptyLabel;
+
+
+    // ✅ Expense IDs store karne ke liye — row index se id milegi
+    private ArrayList<Integer> expenseIds = new ArrayList<>();
 
     // Action buttons
     private JButton editButton;
     private JButton deleteButton;
     private JButton backButton;
 
-    // Colors — same as rest of app
+    // Colors
     private static final Color GRAD_TOP   = new Color(90, 120, 255);
     private static final Color GRAD_BTM   = new Color(150, 70, 210);
     private static final Color BG_COLOR   = new Color(245, 246, 252);
-    private static final Color LABEL_CLR  = new Color(60, 60, 90);
     private static final Color BORDER_CLR = new Color(210, 210, 230);
     private static final Color TEXT_COLOR = new Color(30, 30, 60);
     private static final Color ROW_ALT    = new Color(245, 245, 255);
@@ -96,7 +97,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         sidebar.add(filterTitle);
         sidebar.add(Box.createVerticalStrut(16));
 
-        // Category filter
         sidebar.add(createSidebarLabel("Category"));
         sidebar.add(Box.createVerticalStrut(6));
         String[] cats = {"All", "Food", "Transport", "Shopping", "Bills", "Health", "Other"};
@@ -109,15 +109,13 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         sidebar.add(categoryFilter);
         sidebar.add(Box.createVerticalStrut(16));
 
-        // From date
-        sidebar.add(createSidebarLabel("From Date"));
+        sidebar.add(createSidebarLabel("From Date (DD/MM/YYYY)"));
         sidebar.add(Box.createVerticalStrut(6));
         fromDateField = createSidebarTextField("DD/MM/YYYY");
         sidebar.add(fromDateField);
         sidebar.add(Box.createVerticalStrut(12));
 
-        // To date
-        sidebar.add(createSidebarLabel("To Date"));
+        sidebar.add(createSidebarLabel("To Date (DD/MM/YYYY)"));
         sidebar.add(Box.createVerticalStrut(6));
         toDateField = createSidebarTextField("DD/MM/YYYY");
         sidebar.add(toDateField);
@@ -146,7 +144,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         content.setLayout(new BorderLayout());
         content.setBorder(new EmptyBorder(30, 30, 30, 30));
 
-        // Title row
         JPanel titleRow = new JPanel(new BorderLayout());
         titleRow.setOpaque(false);
         titleRow.setBorder(new EmptyBorder(0, 0, 18, 0));
@@ -159,7 +156,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         pageTitle.setFont(new Font("SansSerif", Font.BOLD, 24));
         pageTitle.setForeground(TEXT_COLOR);
 
-        JLabel pageSub = new JLabel("Sorted by date");
+        JLabel pageSub = new JLabel("Sorted by date (latest first)");
         pageSub.setFont(new Font("SansSerif", Font.PLAIN, 13));
         pageSub.setForeground(new Color(150, 150, 180));
 
@@ -167,7 +164,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         titleText.add(Box.createVerticalStrut(3));
         titleText.add(pageSub);
 
-        // Edit + Delete buttons
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actionPanel.setOpaque(false);
 
@@ -204,19 +200,16 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
         styleTable(expenseTable);
 
-        // ScrollPane — class level
         scrollPane = new JScrollPane(expenseTable);
         scrollPane.setBorder(new LineBorder(BORDER_CLR, 1, true));
         scrollPane.getViewport().setBackground(Color.WHITE);
 
-        // Empty label — class level
-        emptyLabel = new JLabel("No expenses till now. Click 'Add Expense' to get started!");
+        emptyLabel = new JLabel("No expenses found.");
         emptyLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         emptyLabel.setForeground(new Color(170, 170, 190));
         emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
         emptyLabel.setVerticalAlignment(SwingConstants.CENTER);
 
-        // tableWrapper mein dono — sirf ek dikhega ek waqt
         JPanel tableWrapper = new JPanel(new BorderLayout());
         tableWrapper.setOpaque(false);
         tableWrapper.add(scrollPane, BorderLayout.CENTER);
@@ -224,11 +217,9 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
         content.add(tableWrapper, BorderLayout.CENTER);
 
-        /* ===================== ASSEMBLE ===================== */
         add(sidebar,  BorderLayout.WEST);
         add(content,  BorderLayout.CENTER);
 
-        // DB se data load karo
         loadFromDB();
 
         setVisible(true);
@@ -238,6 +229,8 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
     private void loadFromDB() {
         try {
+            ExpenseDAO dao = new ExpenseDAO();
+            // ✅ FIX: DB se ORDER BY date DESC — latest pehle
             ArrayList<ExpenseModel> expenses = dao.getAllExpense(user.getId());
             loadExpenses(expenses);
         } catch (Exception ex) {
@@ -248,7 +241,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         }
     }
 
-    /* ===================== EMPTY STATE CHECK ===================== */
+    /* ===================== EMPTY CHECK ===================== */
 
     private void checkEmpty() {
         boolean isEmpty = tableModel.getRowCount() == 0;
@@ -261,18 +254,49 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
     /* ===================== LOAD DATA ===================== */
 
     public void loadExpenses(ArrayList<ExpenseModel> expenses) {
-        tableModel.setRowCount(0); // clear first
+        tableModel.setRowCount(0);
+
+        expenseIds.clear(); // ✅ pehle clear karo
+
         int i = 1;
         for (ExpenseModel exp : expenses) {
             tableModel.addRow(new Object[]{
                 i++,
                 exp.category,
                 String.format("%.2f", exp.amount),
-                exp.date,
+
+                formatDate(exp.date),   // ✅ FIX: YYYY-MM-DD → DD/MM/YYYY
+
+                formatDate(exp.date),
+
                 exp.description
             });
+            expenseIds.add(exp.getId()); // ✅ har row ka id save karo
         }
         checkEmpty();
+    }
+
+    /* ===================== DATE HELPERS ===================== */
+
+
+    private String formatDate(String date) {
+        try {
+            String[] parts = date.split("-");
+            return parts[2] + "/" + parts[1] + "/" + parts[0];
+        } catch (Exception e) {
+            return date;
+        }
+    }
+
+
+
+    private String convertToDBDate(String displayDate) {
+        try {
+            String[] parts = displayDate.split("/");
+            return parts[2] + "-" + parts[1] + "-" + parts[0];
+        } catch (Exception e) {
+            return displayDate;
+        }
     }
 
     /* ===================== TABLE STYLING ===================== */
@@ -313,15 +337,39 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
         if (e.getSource() == applyFilterButton) {
             String selectedCat = (String) categoryFilter.getSelectedItem();
+            String from = fromDateField.getText().trim();
+            String to   = toDateField.getText().trim();
+
+            boolean catFilter  = !"All".equals(selectedCat);
+            boolean dateFilter = !from.equals("DD/MM/YYYY") && !to.equals("DD/MM/YYYY")
+                                  && !from.isEmpty() && !to.isEmpty();
+
             try {
                 ExpenseDAO dao = new ExpenseDAO();
                 ArrayList<ExpenseModel> filtered;
-                if ("All".equals(selectedCat)) {
-                    filtered = dao.getAllExpense(user.getId());
-                } else {
+
+                if (dateFilter) {
+
+                    // ✅ FIX: DD/MM/YYYY → YYYY-MM-DD convert karke DB mein query karo
+                    String fromDB = convertToDBDate(from);
+                    String toDB   = convertToDBDate(to);
+                    filtered = dao.searchByDate(user.getId(), fromDB, toDB);
+
+                    // Category bhi apply karo agar select hai
+
+                    filtered = dao.searchByDate(user.getId(), fromDB, toDB);
+
+                    if (catFilter) {
+                        filtered.removeIf(exp -> !exp.category.equalsIgnoreCase(selectedCat));
+                    }
+                } else if (catFilter) {
                     filtered = dao.getExpenseWithCategory(user.getId(), selectedCat);
+                } else {
+                    filtered = dao.getAllExpense(user.getId());
                 }
+
                 loadExpenses(filtered);
+
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
                         "Error applying filter: " + ex.getMessage(),
@@ -334,7 +382,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
             fromDateField.setForeground(new Color(200, 210, 255));
             toDateField.setText("DD/MM/YYYY");
             toDateField.setForeground(new Color(200, 210, 255));
-            loadFromDB(); // sab wapas load karo
+            loadFromDB();
 
         } else if (e.getSource() == editButton) {
             int selectedRow = expenseTable.getSelectedRow();
@@ -344,7 +392,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                         "No Selection", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            JOptionPane.showMessageDialog(this, "Edit Expense - Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
+            
 
         } else if (e.getSource() == deleteButton) {
             int selectedRow = expenseTable.getSelectedRow();
@@ -354,9 +402,11 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                         "No Selection", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-//            JOptionPane.showMessageDialog(this, "Delete Expense - Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
-            try {     	
-            	int expenseId = dao.getAllExpense(user.getId()).get(selectedRow).getId(); 
+            
+            try {
+            	ExpenseDAO dao=new ExpenseDAO();
+				int expenseId = dao.getAllExpense(user.getId()).get(selectedRow).getId();
+		
 				boolean isdeleted = dao.deleteExpense(expenseId);
 				if(isdeleted) {
 					ArrayList<ExpenseModel> updated;
@@ -376,7 +426,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         }
     }
 
-    /* ===================== HELPERS ===================== */
+    /* ===================== HELPER METHODS ===================== */
 
     private JLabel createSidebarLabel(String text) {
         JLabel lbl = new JLabel(text);

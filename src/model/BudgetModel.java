@@ -21,3 +21,4 @@ public class BudgetModel {
 		this.id = id;
 	}
 }
+

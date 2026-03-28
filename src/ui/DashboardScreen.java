@@ -3,17 +3,29 @@ package ui;
 import javax.swing.*;
 import javax.swing.border.*;
 
+import db.BudgetDAO;
+import db.ExpenseDAO;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
+import java.util.ArrayList;
 import java.util.List;
 
 import model.ExpenseModel;
 import model.UserModel;
 import ui.Auth.LoginScreen;
+import java.time.LocalDate;
+
 public class DashboardScreen extends JFrame implements ActionListener {
 
     private UserModel user;
+    private ExpenseDAO expenseDao;
+    private BudgetDAO budgetDao;
+    
+    private LocalDate today = LocalDate.now();
+	private int month = today.getMonthValue();
+	private int year = today.getYear();
 
     JButton dashboardButton;
     JButton addExpenseButton;
@@ -26,10 +38,14 @@ public class DashboardScreen extends JFrame implements ActionListener {
     JLabel thisMonthValue;
     JLabel budgetLeftValue;
 
-    JPanel recentCard; 
+    JComboBox<Integer> txnLimitSelector;
+
+    JPanel recentCard;
 
     public DashboardScreen(UserModel user) {
         this.user = user;
+        this.expenseDao = new ExpenseDAO();
+        this.budgetDao  = new BudgetDAO();
 
         setTitle("Dashboard");
         setSize(900, 600);
@@ -145,7 +161,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
         statsRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         statsRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
-        totalExpenseValue = new JLabel();
+        totalExpenseValue = new JLabel("\u20B90.00");
         thisMonthValue    = new JLabel("\u20B90.00");
         budgetLeftValue   = new JLabel("\u20B90.00");
 
@@ -156,7 +172,31 @@ public class DashboardScreen extends JFrame implements ActionListener {
         content.add(statsRow);
         content.add(Box.createVerticalStrut(20));
 
-        /* ---- Recent Transactions ---- */
+        /* ---- Txn Header Row (title + dropdown) ---- */
+        JPanel txnHeaderRow = new JPanel(new BorderLayout());
+        txnHeaderRow.setOpaque(false);
+        txnHeaderRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        txnHeaderRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+
+        JLabel txnTitle = new JLabel("Recent Transactions");
+        txnTitle.setFont(new Font("SansSerif", Font.BOLD, 15));
+        txnTitle.setForeground(new Color(40, 40, 40));
+
+        Integer[] limits = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        txnLimitSelector = new JComboBox<>(limits);
+        txnLimitSelector.setSelectedItem(5);
+        txnLimitSelector.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txnLimitSelector.setPreferredSize(new Dimension(70, 28));
+        txnLimitSelector.setFocusable(false);
+        txnLimitSelector.addActionListener(this);
+
+        txnHeaderRow.add(txnTitle, BorderLayout.WEST);
+        txnHeaderRow.add(txnLimitSelector, BorderLayout.EAST);
+
+        content.add(txnHeaderRow);
+        content.add(Box.createVerticalStrut(8));
+
+        /* ---- Recent Transactions Card ---- */
         recentCard = new JPanel(new BorderLayout());
         recentCard.setBackground(Color.WHITE);
         recentCard.setBorder(new CompoundBorder(
@@ -166,44 +206,55 @@ public class DashboardScreen extends JFrame implements ActionListener {
         recentCard.setAlignmentX(Component.LEFT_ALIGNMENT);
         recentCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
-        JLabel recentTitle = new JLabel("Recent Transactions");
-        recentTitle.setFont(new Font("SansSerif", Font.BOLD, 15));
-        recentTitle.setForeground(new Color(40, 40, 40));
-
-        JLabel noData = new JLabel("No transactions yet. Click 'Add Expense' to get started.");
-        noData.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        noData.setForeground(new Color(170, 170, 190));
-        noData.setHorizontalAlignment(SwingConstants.CENTER);
-
-        recentCard.add(recentTitle, BorderLayout.NORTH);
-        recentCard.add(noData, BorderLayout.CENTER);
-
         content.add(recentCard);
 
         /* ===================== ASSEMBLE ===================== */
-        add(sidebar,  BorderLayout.WEST);
-        add(content,  BorderLayout.CENTER);
+        add(sidebar, BorderLayout.WEST);
+        add(content, BorderLayout.CENTER);
 
         setVisible(true);
+
+        loadDashboardData();
+    }
+
+    /* ===================== LOAD DASHBOARD DATA ===================== */
+
+    public void loadDashboardData() {
+        try {
+            double total      = expenseDao.getTotalExpense(user.getId());
+            double monthSpent = expenseDao.getMonthlyTotal(user.getId(), this.month, this.year);
+            double budgetLeft = budgetDao.getRemainingBudget(user.getId(),this.month,this.year);
+
+            refreshData(total, monthSpent, budgetLeft);
+
+            // ✅ FIX: duplicate variable hataya — sirf ek baar getAllExpense call
+            ArrayList<ExpenseModel> allExpenses = expenseDao.getAllExpense(user.getId());
+            int limit = (txnLimitSelector != null) ? (int) txnLimitSelector.getSelectedItem() : 5;
+
+            ArrayList<ExpenseModel> limited = new ArrayList<>();
+            for (int i = 0; i < Math.min(limit, allExpenses.size()); i++) {
+                limited.add(allExpenses.get(i));
+            }
+
+            refreshTransactions(limited);
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error loading dashboard data: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /* ===================== REFRESH METHODS ===================== */
 
-    // Stat cards update karne ke liye — AddExpenseScreen ya DB se call karo
     public void refreshData(double total, double month, double budget) {
-        totalExpenseValue.setText("\u20B9" + total);
-        thisMonthValue.setText("\u20B9" + month);
-        budgetLeftValue.setText("\u20B9" + budget);
+        totalExpenseValue.setText(String.format("\u20B9%.2f", total));
+        thisMonthValue.setText(String.format("\u20B9%.2f", month));
+        budgetLeftValue.setText(String.format("\u20B9%.2f", budget));
     }
 
-    // Recent transactions update karne ke liye — AddExpenseScreen ya DB se call karo
     public void refreshTransactions(List<ExpenseModel> expenses) {
-        recentCard.removeAll(); // purane components hata do
-
-        JLabel recentTitle = new JLabel("Recent Transactions");
-        recentTitle.setFont(new Font("SansSerif", Font.BOLD, 15));
-        recentTitle.setForeground(new Color(40, 40, 40));
-        recentCard.add(recentTitle, BorderLayout.NORTH);
+        recentCard.removeAll();
 
         if (expenses == null || expenses.isEmpty()) {
             JLabel noData = new JLabel("No transactions yet. Click 'Add Expense' to get started.");
@@ -217,22 +268,56 @@ public class DashboardScreen extends JFrame implements ActionListener {
             listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
             listPanel.setBackground(Color.WHITE);
 
+            // ---- Column Headers ----
+            JPanel headerRow = new JPanel(new GridLayout(1, 3));
+            headerRow.setBackground(new Color(245, 246, 252));
+            headerRow.setBorder(new EmptyBorder(4, 0, 8, 0));
+            headerRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+            String[] cols = {"Category", "Date", "Amount"};
+            for (String col : cols) {
+                JLabel h = new JLabel(col);
+                h.setFont(new Font("SansSerif", Font.BOLD, 12));
+                h.setForeground(new Color(120, 120, 140));
+                if (col.equals("Amount")) h.setHorizontalAlignment(SwingConstants.RIGHT);
+                if (col.equals("Date"))   h.setHorizontalAlignment(SwingConstants.CENTER);
+                headerRow.add(h);
+            }
+            listPanel.add(headerRow);
+
+            JSeparator headerSep = new JSeparator();
+            headerSep.setForeground(new Color(210, 210, 225));
+            headerSep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+            listPanel.add(headerSep);
+
+            // ---- Data Rows ----
             for (ExpenseModel exp : expenses) {
-                JPanel row = new JPanel(new BorderLayout());
+                JPanel row = new JPanel(new GridLayout(1, 3));
                 row.setBackground(Color.WHITE);
-                row.setBorder(new EmptyBorder(8, 0, 8, 0));
-                row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+                row.setBorder(new EmptyBorder(10, 0, 10, 0));
+                row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
 
                 JLabel nameLabel = new JLabel(exp.category);
                 nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
                 nameLabel.setForeground(new Color(40, 40, 40));
 
                 JLabel amountLabel = new JLabel("\u20B9" + exp.amount);
+                JLabel categoryLabel = new JLabel(exp.category);
+                categoryLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+                categoryLabel.setForeground(new Color(40, 40, 40));
+
+                JLabel dateLabel = new JLabel(exp.date);
+                dateLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+                dateLabel.setForeground(new Color(130, 130, 150));
+                dateLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
                 amountLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
                 amountLabel.setForeground(new Color(220, 70, 100));
+                amountLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
-                row.add(nameLabel,   BorderLayout.WEST);
-                row.add(amountLabel, BorderLayout.EAST);
+                row.add(categoryLabel);
+                row.add(dateLabel);
+                row.add(amountLabel);
                 listPanel.add(row);
 
                 JSeparator sep = new JSeparator();
@@ -247,8 +332,8 @@ public class DashboardScreen extends JFrame implements ActionListener {
             recentCard.add(scrollPane, BorderLayout.CENTER);
         }
 
-        recentCard.revalidate(); // layout recalculate karo
-        recentCard.repaint();    // screen pe draw karo
+        recentCard.revalidate();
+        recentCard.repaint();
     }
 
     /* ===================== HELPER METHODS ===================== */
@@ -330,15 +415,29 @@ public class DashboardScreen extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == addExpenseButton) {
-            new AddExpenseScreen(this,user);
+            new AddExpenseScreen(this, user);
         } else if (e.getSource() == viewExpensesButton) {
-            new ViewExpensesScreen(this,user);
+            new ViewExpensesScreen(this, user);
         } else if (e.getSource() == analysisButton) {
-            JOptionPane.showMessageDialog(this, "Analysis - Coming Soon!");
+            new AnalysisScreen(this, user);
         } else if (e.getSource() == budgetButton) {
-            JOptionPane.showMessageDialog(this, "Budget - Coming Soon!");
+            new BudgetScreen(this, user);
         } else if (e.getSource() == dashboardButton) {
-            JOptionPane.showMessageDialog(this, "You are already on Dashboard!");
+            loadDashboardData();
+        } else if (e.getSource() == txnLimitSelector) {
+            // ✅ Dropdown change hone pe transactions reload
+            try {
+                int limit = (int) txnLimitSelector.getSelectedItem();
+                ArrayList<ExpenseModel> all = expenseDao.getAllExpense(user.getId());
+                ArrayList<ExpenseModel> filtered = new ArrayList<>();
+                for (int i = 0; i < Math.min(limit, all.size()); i++) {
+                    filtered.add(all.get(i));
+                }
+                refreshTransactions(filtered);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         } else if (e.getSource() == logoutButton) {
             int confirm = JOptionPane.showConfirmDialog(
                     this, "Are you sure you want to logout?",
