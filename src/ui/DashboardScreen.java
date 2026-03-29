@@ -47,14 +47,15 @@ public class DashboardScreen extends JFrame implements ActionListener {
         this.expenseDao = new ExpenseDAO();
         this.budgetDao  = new BudgetDAO();
 
+        //Dash Board
         setTitle("Dashboard");
         setSize(900, 600);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        /* ===================== LEFT SIDEBAR ===================== */
-
+       
+        //Side Bar
         JPanel sidebar = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -70,13 +71,14 @@ public class DashboardScreen extends JFrame implements ActionListener {
                 g2.dispose();
             }
         };
-        sidebar.setPreferredSize(new Dimension(220, 600));
+        sidebar.setPreferredSize(new Dimension(220,0));
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBorder(new EmptyBorder(30, 20, 30, 20));
-        sidebar.setOpaque(true);
-
-        JLabel appName = new JLabel("ExpenseTracker");
-        appName.setFont(new Font("SansSerif", Font.BOLD, 18));
+       
+        
+        //welcome and Application name
+        JLabel appName = new JLabel("Expense Tracker");
+        appName.setFont(new Font("Segoe UI", Font.BOLD, 18));
         appName.setForeground(Color.WHITE);
         appName.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -84,39 +86,43 @@ public class DashboardScreen extends JFrame implements ActionListener {
         sidebarSep.setForeground(Color.WHITE);
         sidebarSep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
 
+     
         String name = (user != null && user.getName() != null && !user.getName().isEmpty())
-                      ? user.getName() : "User";
-
-        JLabel welcomeText = new JLabel("Welcome,");
-        welcomeText.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        welcomeText.setForeground(new Color(200, 210, 255));
-        welcomeText.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel userName = new JLabel(name);
-        userName.setFont(new Font("SansSerif", Font.BOLD, 15));
-        userName.setForeground(Color.WHITE);
-        userName.setAlignmentX(Component.LEFT_ALIGNMENT);
+                ? user.getName() : "User";
+        if (!name.isEmpty()) {
+            name = name.substring(0, 1).toUpperCase() + name.substring(1);
+        } 
+        JLabel welcomeLabel = new JLabel("Welcome, " + name);
+        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        welcomeLabel.setForeground(new Color(200, 210, 255));
+        welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         sidebar.add(appName);
         sidebar.add(Box.createVerticalStrut(8));
         sidebar.add(sidebarSep);
         sidebar.add(Box.createVerticalStrut(16));
-        sidebar.add(welcomeText);
-        sidebar.add(userName);
+        sidebar.add(welcomeLabel);
         sidebar.add(Box.createVerticalStrut(30));
 
+        //Create buttons
         dashboardButton    = createSidebarButton("Dashboard");
         addExpenseButton   = createSidebarButton("Add Expense");
         viewExpensesButton = createSidebarButton("View Expenses");
         analysisButton     = createSidebarButton("Analysis");
         budgetButton       = createSidebarButton("Budget");
+        logoutButton       = createSidebarButton("Logout");
 
-        dashboardButton.addActionListener(this);
-        addExpenseButton.addActionListener(this);
-        viewExpensesButton.addActionListener(this);
-        analysisButton.addActionListener(this);
-        budgetButton.addActionListener(this);
+        //Add listeners
+        JButton[] buttons = {
+            dashboardButton, addExpenseButton, viewExpensesButton,
+            analysisButton, budgetButton, logoutButton
+        };
 
+        for (JButton btn : buttons) {
+            btn.addActionListener(this);
+        }
+
+        // Add to Side bar
         sidebar.add(dashboardButton);
         sidebar.add(Box.createVerticalStrut(8));
         sidebar.add(addExpenseButton);
@@ -126,28 +132,26 @@ public class DashboardScreen extends JFrame implements ActionListener {
         sidebar.add(analysisButton);
         sidebar.add(Box.createVerticalStrut(8));
         sidebar.add(budgetButton);
-        sidebar.add(Box.createVerticalGlue());
-
-        logoutButton = createSidebarButton("Logout");
-        logoutButton.addActionListener(this);
+        sidebar.add(Box.createVerticalGlue()); 
         sidebar.add(logoutButton);
 
-        /* ===================== MAIN CONTENT ===================== */
 
+        //main content
         JPanel content = new JPanel();
         content.setBackground(new Color(245, 246, 252));
         content.setOpaque(true);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setBorder(new EmptyBorder(35, 35, 35, 35));
 
+        //right upper half
         JLabel dashTitle = new JLabel("Dashboard");
-        dashTitle.setFont(new Font("SansSerif", Font.BOLD, 26));
+        dashTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         dashTitle.setForeground(new Color(40, 40, 40));
         dashTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel dashSub = new JLabel("Here's your expense overview");
-        dashSub.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        dashSub.setForeground(new Color(150, 150, 170));
+        dashSub.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        dashSub.setForeground(new Color(120, 120, 140));
         dashSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         content.add(dashTitle);
@@ -155,12 +159,13 @@ public class DashboardScreen extends JFrame implements ActionListener {
         content.add(dashSub);
         content.add(Box.createVerticalStrut(25));
 
-        /* ---- Stat Cards ---- */
+        
+        //Latest Details
         JPanel statsRow = new JPanel(new GridLayout(1, 3, 15, 0));
         statsRow.setOpaque(false);
         statsRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
         statsRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
-
         totalExpenseValue = new JLabel("\u20B90.00");
         thisMonthValue    = new JLabel("\u20B90.00");
         budgetLeftValue   = new JLabel("\u20B90.00");
@@ -171,32 +176,33 @@ public class DashboardScreen extends JFrame implements ActionListener {
 
         content.add(statsRow);
         content.add(Box.createVerticalStrut(20));
+        
 
-        /* ---- Txn Header Row (title + dropdown) ---- */
+        //Latest Transactions Header
         JPanel txnHeaderRow = new JPanel(new BorderLayout());
         txnHeaderRow.setOpaque(false);
         txnHeaderRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         txnHeaderRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
 
         JLabel txnTitle = new JLabel("Recent Transactions");
-        txnTitle.setFont(new Font("SansSerif", Font.BOLD, 15));
+        txnTitle.setFont(new Font("Segoe UI", Font.BOLD, 15));
         txnTitle.setForeground(new Color(40, 40, 40));
 
         Integer[] limits = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         txnLimitSelector = new JComboBox<>(limits);
         txnLimitSelector.setSelectedItem(5);
-        txnLimitSelector.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txnLimitSelector.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         txnLimitSelector.setPreferredSize(new Dimension(70, 28));
         txnLimitSelector.setFocusable(false);
         txnLimitSelector.addActionListener(this);
-
+        
         txnHeaderRow.add(txnTitle, BorderLayout.WEST);
         txnHeaderRow.add(txnLimitSelector, BorderLayout.EAST);
 
         content.add(txnHeaderRow);
         content.add(Box.createVerticalStrut(8));
 
-        /* ---- Recent Transactions Card ---- */
+        //recent transaction card
         recentCard = new JPanel(new BorderLayout());
         recentCard.setBackground(Color.WHITE);
         recentCard.setBorder(new CompoundBorder(
@@ -205,29 +211,27 @@ public class DashboardScreen extends JFrame implements ActionListener {
         ));
         recentCard.setAlignmentX(Component.LEFT_ALIGNMENT);
         recentCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-
         content.add(recentCard);
 
-        /* ===================== ASSEMBLE ===================== */
+        
+        //Assemble
         add(sidebar, BorderLayout.WEST);
         add(content, BorderLayout.CENTER);
-
+        
+        
         setVisible(true);
 
         loadDashboardData();
     }
 
-    /* ===================== LOAD DASHBOARD DATA ===================== */
-
+    //Dash board Latest Data
     public void loadDashboardData() {
         try {
             double total      = expenseDao.getTotalExpense(user.getId());
             double monthSpent = expenseDao.getMonthlyTotal(user.getId(), this.month, this.year);
             double budgetLeft = budgetDao.getRemainingBudget(user.getId(),this.month,this.year);
-
             refreshData(total, monthSpent, budgetLeft);
-
-            // ✅ FIX: duplicate variable hataya — sirf ek baar getAllExpense call
+            
             ArrayList<ExpenseModel> allExpenses = expenseDao.getAllExpense(user.getId());
             int limit = (txnLimitSelector != null) ? (int) txnLimitSelector.getSelectedItem() : 5;
 
@@ -235,7 +239,6 @@ public class DashboardScreen extends JFrame implements ActionListener {
             for (int i = 0; i < Math.min(limit, allExpenses.size()); i++) {
                 limited.add(allExpenses.get(i));
             }
-
             refreshTransactions(limited);
 
         } catch (Exception ex) {
@@ -245,8 +248,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
         }
     }
 
-    /* ===================== REFRESH METHODS ===================== */
-
+    //Refresh The dash board data
     public void refreshData(double total, double month, double budget) {
         totalExpenseValue.setText(String.format("\u20B9%.2f", total));
         thisMonthValue.setText(String.format("\u20B9%.2f", month));
@@ -258,7 +260,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
 
         if (expenses == null || expenses.isEmpty()) {
             JLabel noData = new JLabel("No transactions yet. Click 'Add Expense' to get started.");
-            noData.setFont(new Font("SansSerif", Font.PLAIN, 13));
+            noData.setFont(new Font("Segoe UI", Font.PLAIN, 13));
             noData.setForeground(new Color(170, 170, 190));
             noData.setHorizontalAlignment(SwingConstants.CENTER);
             recentCard.add(noData, BorderLayout.CENTER);
@@ -268,7 +270,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
             listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
             listPanel.setBackground(Color.WHITE);
 
-            // ---- Column Headers ----
+            
             JPanel headerRow = new JPanel(new GridLayout(1, 3));
             headerRow.setBackground(new Color(245, 246, 252));
             headerRow.setBorder(new EmptyBorder(4, 0, 8, 0));
@@ -277,7 +279,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
             String[] cols = {"Category", "Date", "Amount"};
             for (String col : cols) {
                 JLabel h = new JLabel(col);
-                h.setFont(new Font("SansSerif", Font.BOLD, 12));
+                h.setFont(new Font("Segoe UI", Font.BOLD, 12));
                 h.setForeground(new Color(120, 120, 140));
                 if (col.equals("Amount")) h.setHorizontalAlignment(SwingConstants.RIGHT);
                 if (col.equals("Date"))   h.setHorizontalAlignment(SwingConstants.CENTER);
@@ -290,31 +292,29 @@ public class DashboardScreen extends JFrame implements ActionListener {
             headerSep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
             listPanel.add(headerSep);
 
-            // ---- Data Rows ----
+            
             for (ExpenseModel exp : expenses) {
                 JPanel row = new JPanel(new GridLayout(1, 3));
                 row.setBackground(Color.WHITE);
                 row.setBorder(new EmptyBorder(10, 0, 10, 0));
                 row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
 
-                JLabel nameLabel = new JLabel(exp.category);
-                nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
-                nameLabel.setForeground(new Color(40, 40, 40));
-
+                
                 JLabel amountLabel = new JLabel("\u20B9" + exp.amount);
+                amountLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                amountLabel.setForeground(new Color(40, 40, 40));
+                amountLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+                
                 JLabel categoryLabel = new JLabel(exp.category);
-                categoryLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+                categoryLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
                 categoryLabel.setForeground(new Color(40, 40, 40));
 
                 JLabel dateLabel = new JLabel(exp.date);
-                dateLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+                dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
                 dateLabel.setForeground(new Color(130, 130, 150));
                 dateLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-                amountLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
-                amountLabel.setForeground(new Color(220, 70, 100));
-                amountLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-
+                
                 row.add(categoryLabel);
                 row.add(dateLabel);
                 row.add(amountLabel);
@@ -336,8 +336,8 @@ public class DashboardScreen extends JFrame implements ActionListener {
         recentCard.repaint();
     }
 
-    /* ===================== HELPER METHODS ===================== */
-
+    
+    //Latest StatCard
     private JPanel createStatCard(String title, JLabel valueLabel, Color color) {
         JPanel card = new JPanel() {
             @Override
@@ -355,11 +355,11 @@ public class DashboardScreen extends JFrame implements ActionListener {
         card.setBorder(new EmptyBorder(18, 20, 18, 20));
 
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        titleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         titleLabel.setForeground(new Color(255, 255, 255, 200));
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        valueLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         valueLabel.setForeground(Color.WHITE);
         valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -370,6 +370,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
         return card;
     }
 
+    //side bar button helper method
     private JButton createSidebarButton(String text) {
         JButton btn = new JButton(text) {
             private boolean hovered = false;
@@ -395,7 +396,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
             }
         };
 
-        btn.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btn.setForeground(Color.WHITE);
         btn.setContentAreaFilled(false);
         btn.setOpaque(false);
@@ -410,8 +411,7 @@ public class DashboardScreen extends JFrame implements ActionListener {
         return btn;
     }
 
-    /* ===================== ACTION LISTENER ===================== */
-
+   //action listener
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == addExpenseButton) {
@@ -425,7 +425,6 @@ public class DashboardScreen extends JFrame implements ActionListener {
         } else if (e.getSource() == dashboardButton) {
             loadDashboardData();
         } else if (e.getSource() == txnLimitSelector) {
-            // ✅ Dropdown change hone pe transactions reload
             try {
                 int limit = (int) txnLimitSelector.getSelectedItem();
                 ArrayList<ExpenseModel> all = expenseDao.getAllExpense(user.getId());

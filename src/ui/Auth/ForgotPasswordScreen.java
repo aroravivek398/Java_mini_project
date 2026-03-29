@@ -23,8 +23,8 @@ public class ForgotPasswordScreen extends JFrame implements ActionListener {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        /* ---------- Gradient Background ---------- */
-
+        
+        //background Gradient
         JPanel background = new JPanel() {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
@@ -39,23 +39,20 @@ public class ForgotPasswordScreen extends JFrame implements ActionListener {
         };
         background.setLayout(new GridBagLayout());
 
-        /* ---------- White Card ---------- */
-
+        
+        
+        //Reset Password card
         JPanel card = new JPanel();
         card.setPreferredSize(new Dimension(340, 340));
         card.setBackground(Color.WHITE);
         card.setBorder(new EmptyBorder(30, 35, 30, 35));
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
 
-        /* ---------- Title ---------- */
-
         JLabel title = new JLabel("Reset Password");
         title.setFont(new Font("Segoe UI", Font.BOLD, 24));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         card.add(title);
         card.add(Box.createVerticalStrut(28));
-
-        /* ---------- Fields ---------- */
 
         emailField    = new JTextField();
         passwordField = new JPasswordField();
@@ -65,8 +62,9 @@ public class ForgotPasswordScreen extends JFrame implements ActionListener {
         card.add(createInput("New Password", passwordField));
         card.add(Box.createVerticalStrut(28));
 
-        /* ---------- Rounded Reset Button ---------- */
 
+        
+        //reset button
         resetButton = new JButton("Reset Password") {
             @Override
             protected void paintComponent(Graphics g) {
@@ -75,7 +73,7 @@ public class ForgotPasswordScreen extends JFrame implements ActionListener {
                 if (getModel().isPressed()) {
                     g2.setColor(new Color(30, 100, 200));
                 } else if (getModel().isRollover()) {
-                    g2.setColor(new Color(60, 140, 255));
+                    g2.setColor(new Color(30, 100, 200));
                 } else {
                     g2.setColor(new Color(40, 120, 230));
                 }
@@ -89,6 +87,7 @@ public class ForgotPasswordScreen extends JFrame implements ActionListener {
                 g2.dispose();
             }
         };
+        resetButton.setRolloverEnabled(true);
         resetButton.setFocusPainted(false);
         resetButton.setContentAreaFilled(false);
         resetButton.setBorderPainted(false);
@@ -103,17 +102,23 @@ public class ForgotPasswordScreen extends JFrame implements ActionListener {
         card.add(resetButton);
         card.add(Box.createVerticalStrut(18));
 
-        /* ---------- Back to Login Link ---------- */
-
+        
+        //back to login
         backLabel = new JLabel("Back to Login");
         backLabel.setForeground(new Color(90, 120, 255));
         backLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         backLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         backLabel.addMouseListener(new MouseAdapter() {
+        	public void mouseEntered(MouseEvent e) {
+                backLabel.setForeground(new Color(60, 90, 220));
+            }
+            public void mouseExited(MouseEvent e) {
+                backLabel.setForeground(new Color(90, 120, 255));
+            }
             public void mouseClicked(MouseEvent e) {
-                new LoginScreen();
-                dispose();
+            	new LoginScreen().setVisible(true);
+            	dispose();
             }
         });
 
@@ -124,8 +129,8 @@ public class ForgotPasswordScreen extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    /* ---------- Same createInput as SignUp ---------- */
-
+    
+    //panel for input 
     private JPanel createInput(String labelText, JComponent field) {
 
         JPanel panel = new JPanel();
@@ -145,10 +150,6 @@ public class ForgotPasswordScreen extends JFrame implements ActionListener {
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         field.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        if (field instanceof JTextField) {
-            ((JTextField) field).setHorizontalAlignment(JTextField.LEFT);
-        }
-
         panel.add(label);
         panel.add(Box.createVerticalStrut(3));
         panel.add(field);
@@ -156,11 +157,10 @@ public class ForgotPasswordScreen extends JFrame implements ActionListener {
         return panel;
     }
 
-    /* ---------- Action ---------- */
-
+    
+    //action
     @Override
     public void actionPerformed(ActionEvent e) {
-
         String email    = emailField.getText().trim();
         String password = new String(passwordField.getPassword());
 
@@ -173,7 +173,6 @@ public class ForgotPasswordScreen extends JFrame implements ActionListener {
             JOptionPane.showMessageDialog(this, "Invalid email format");
             return;
         }
-
         try {
             DbConnection db = new DbConnection();
 

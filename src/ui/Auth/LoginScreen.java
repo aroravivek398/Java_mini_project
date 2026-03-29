@@ -27,8 +27,8 @@ public class LoginScreen extends JFrame implements ActionListener {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        /* ---------- Gradient Background ---------- */
-
+       
+        //background Gradient Color
         JPanel background = new JPanel() {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
@@ -43,35 +43,37 @@ public class LoginScreen extends JFrame implements ActionListener {
         };
         background.setLayout(new GridBagLayout());
 
-        /* ---------- White Card ---------- */
-
+        
+        //Login card
         JPanel card = new JPanel();
         card.setPreferredSize(new Dimension(300, 340));
         card.setBackground(Color.WHITE);
         card.setBorder(new EmptyBorder(30, 30, 30, 30));
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
 
-        /* ---------- Title ---------- */
+       
 
+        //login Title
         JLabel title = new JLabel("Login");
         title.setFont(new Font("Segoe UI", Font.BOLD, 24));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         card.add(title);
         card.add(Box.createVerticalStrut(24));
 
-        /* ---------- Fields ---------- */
+        
 
+        // email and password field
         emailField    = new JTextField();
         passwordField = new JPasswordField();
-
         card.add(createInput("Email", emailField));
         card.add(Box.createVerticalStrut(14));
         card.add(createInput("Password", passwordField));
         card.add(Box.createVerticalStrut(10));
 
-        /* ---------- Forgot Password ---------- */
-
-        forgotLabel = new JLabel("Forgot Password?");
+        
+        
+        //forgot password
+        forgotLabel = new JLabel("Forgot Password?");  
         forgotLabel.setForeground(Color.GRAY);
         forgotLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         forgotLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -84,10 +86,12 @@ public class LoginScreen extends JFrame implements ActionListener {
         });
 
         card.add(forgotLabel);
-        card.add(Box.createVerticalStrut(22));
+        card.add(Box.createVerticalStrut(22));  
 
-        /* ---------- Rounded Login Button ---------- */
-
+        
+        
+        
+        //login button
         loginButton = new JButton("Login") {
             @Override
             protected void paintComponent(Graphics g) {
@@ -96,7 +100,7 @@ public class LoginScreen extends JFrame implements ActionListener {
                 if (getModel().isPressed()) {
                     g2.setColor(new Color(30, 100, 200));
                 } else if (getModel().isRollover()) {
-                    g2.setColor(new Color(60, 140, 255));
+                    g2.setColor(new Color(30, 100, 200));
                 } else {
                     g2.setColor(new Color(40, 120, 230));
                 }
@@ -110,6 +114,7 @@ public class LoginScreen extends JFrame implements ActionListener {
                 g2.dispose();
             }
         };
+        loginButton.setRolloverEnabled(true);
         loginButton.setFocusPainted(false);
         loginButton.setContentAreaFilled(false);
         loginButton.setBorderPainted(false);
@@ -120,57 +125,60 @@ public class LoginScreen extends JFrame implements ActionListener {
         loginButton.setPreferredSize(new Dimension(240, 42));
         loginButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         loginButton.addActionListener(this);
-
         card.add(loginButton);
         card.add(Box.createVerticalStrut(18));
+        
+        
+        
 
-        /* ---------- Sign Up Link ---------- */
-
+        
+        //sign up button
         signupLabel = new JLabel("New User? Register");
         signupLabel.setForeground(new Color(90, 120, 255));
         signupLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         signupLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         signupLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         signupLabel.addMouseListener(new MouseAdapter() {
+        	public void mouseEntered(MouseEvent e) {
+                signupLabel.setForeground(new Color(60, 90, 220));
+            }
+            public void mouseExited(MouseEvent e) {
+                signupLabel.setForeground(new Color(90, 120, 255));
+            }
             public void mouseClicked(MouseEvent e) {
-                new SignUpScreen();
+            	new SignUpScreen().setVisible(true);
                 dispose();
             }
         });
-
         card.add(signupLabel);
-
         background.add(card);
         add(background);
         getRootPane().setDefaultButton(loginButton);
         setVisible(true);
     }
 
-    /* ---------- createInput — same as SignUp & ForgotPassword ---------- */
 
+
+    //panel for email and password
     private JPanel createInput(String labelText, JComponent field) {
-
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
         panel.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 52));
-
+        
         JLabel label = new JLabel(labelText);
         label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         label.setForeground(new Color(110, 130, 255));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
-
+        
         field.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         field.setBorder(new MatteBorder(0, 0, 2, 0, new Color(90, 120, 255)));
         field.setOpaque(false);
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         field.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        if (field instanceof JTextField) {
-            ((JTextField) field).setHorizontalAlignment(JTextField.LEFT);
-        }
-
+        field.setCursor(new Cursor(Cursor.TEXT_CURSOR));
+        
         panel.add(label);
         panel.add(Box.createVerticalStrut(3));
         panel.add(field);
@@ -178,48 +186,37 @@ public class LoginScreen extends JFrame implements ActionListener {
         return panel;
     }
 
-    /* ---------- Action ---------- */
 
+    //action listener
     @Override
     public void actionPerformed(ActionEvent e) {
-
         if (e.getSource() == loginButton) {
-
-            String email    = emailField.getText().trim();
-//        	String email= "swarnabha@test.com";
-        	
-            String password = new String(passwordField.getPassword());
-//        	String password ="test123";
-
+//            String email    = emailField.getText().trim();
+        	String email="nilesh@test.com";
+//            String password = new String(passwordField.getPassword());
+        	String password="n@123";
             if (Validator.isEmpty(email) || Validator.isEmpty(password)) {
                 JOptionPane.showMessageDialog(this, "Fields cannot be empty");
                 return;
             }
-
             if (!Validator.isValidEmail(email)) {
                 JOptionPane.showMessageDialog(this, "Invalid email format");
                 return;
             }
-
-            try {
-                DbConnection db   = new DbConnection();
+            try{
+                DbConnection db = new DbConnection();
                 UserModel    user = db.loginUser(email, password);
-
                 if (user != null) {
                     new DashboardScreen(user);
-                    
                     dispose();
-                } else {
+                }else {
                     JOptionPane.showMessageDialog(this, "Invalid Email or Password");
                 }
 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage());
             }
-
         }
-        
-
     }
     
     public static void main(String[] args) {

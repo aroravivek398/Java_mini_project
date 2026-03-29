@@ -18,28 +18,28 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
     private DashboardScreen dashboard;
     private UserModel user;
 
-    // Filters
+
     private JComboBox<String> categoryFilter;
     private JTextField fromDateField;
     private JTextField toDateField;
     private JButton applyFilterButton;
     private JButton clearFilterButton;
 
-    // Table
+
     private JTable expenseTable;
     private DefaultTableModel tableModel;
     private JScrollPane scrollPane;
     private JLabel emptyLabel;
 
-    // Expense IDs store karne ke liye
+    
     private ArrayList<Integer> expenseIds = new ArrayList<>();
 
-    // Action buttons
+
     private JButton editButton;
     private JButton deleteButton;
     private JButton backButton;
 
-    // Colors
+
     private static final Color GRAD_TOP   = new Color(90, 120, 255);
     private static final Color GRAD_BTM   = new Color(150, 70, 210);
     private static final Color BG_COLOR   = new Color(245, 246, 252);
@@ -57,7 +57,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        /* ===================== LEFT SIDEBAR ===================== */
+        
 
         JPanel sidebar = new JPanel() {
             @Override
@@ -135,7 +135,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         backButton.addActionListener(this);
         sidebar.add(backButton);
 
-        /* ===================== MAIN CONTENT ===================== */
 
         JPanel content = new JPanel();
         content.setBackground(BG_COLOR);
@@ -179,7 +178,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
         content.add(titleRow, BorderLayout.NORTH);
 
-        /* ---- Table ---- */
+  
         String[] columns = {"Sr. No.", "Category", "Amount (\u20B9)", "Date", "Description"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -223,193 +222,105 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    /* ===================== EDIT DIALOG ===================== */
+   
 
-    private void showEditDialog(int selectedRow) {
-        int expenseId = expenseIds.get(selectedRow);
+    private void showEditDialog(int row) {
 
-        // Current values table se nikalo
-        String currentCategory    = (String) tableModel.getValueAt(selectedRow, 1);
-        String currentAmountStr   = (String) tableModel.getValueAt(selectedRow, 2);
-        String currentDateDisplay = (String) tableModel.getValueAt(selectedRow, 3);
-        String currentDesc        = (String) tableModel.getValueAt(selectedRow, 4);
+        int id = expenseIds.get(row);
 
-        // ---- Dialog ----
+        String category = (String) tableModel.getValueAt(row, 1);
+        String amount   = (String) tableModel.getValueAt(row, 2);
+        String date     = (String) tableModel.getValueAt(row, 3);
+        String desc     = (String) tableModel.getValueAt(row, 4);
+
+        // Dialog
         JDialog dialog = new JDialog(this, "Edit Expense", true);
         dialog.setSize(420, 420);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout());
-        dialog.setResizable(false);
 
-        // ---- Header ----
-        JPanel header = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setPaint(new GradientPaint(0, 0, GRAD_TOP, getWidth(), 0, GRAD_BTM));
-                g2.fillRect(0, 0, getWidth(), getHeight());
-                g2.dispose();
-            }
-        };
-        header.setPreferredSize(new Dimension(420, 58));
-        header.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 16));
+        // Header
+        JPanel header = new JPanel();
+        header.setBackground(new Color(90,120,255));
+        header.setPreferredSize(new Dimension(420, 50));
+        header.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 12));
 
-        JLabel headerTitle = new JLabel("Edit Expense");
-        headerTitle.setFont(new Font("SansSerif", Font.BOLD, 16));
-        headerTitle.setForeground(Color.WHITE);
-        header.add(headerTitle);
+        JLabel title = new JLabel("Edit Expense");
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        header.add(title);
 
-        // ---- Form ----
-        JPanel form = new JPanel();
+        // Form
+        JPanel form = new JPanel(new GridLayout(8,1,5,5));
+        form.setBorder(new EmptyBorder(20, 25, 20, 25));
         form.setBackground(Color.WHITE);
-        form.setLayout(new GridBagLayout());
-        form.setBorder(new EmptyBorder(20, 25, 10, 25));
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill      = GridBagConstraints.HORIZONTAL;
-        gbc.insets    = new Insets(5, 0, 5, 0);
-        gbc.weightx   = 1.0;
-        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        JComboBox<String> catBox = new JComboBox<>(
+                new String[]{"Food","Transport","Shopping","Bills","Health","Other"});
+        catBox.setSelectedItem(category);
 
-        // Category
-        gbc.gridy = 0;
-        form.add(createFormLabel("Category"), gbc);
+        JTextField amountField = new JTextField(amount);
+        JTextField dateField   = new JTextField(date);
+        JTextField descField   = new JTextField(desc == null ? "" : desc);
 
-        String[] cats = {"Food", "Transport", "Shopping", "Bills", "Health", "Other"};
-        JComboBox<String> catBox = new JComboBox<>(cats);
-        catBox.setSelectedItem(currentCategory);
-        catBox.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        catBox.setBackground(Color.WHITE);
-        catBox.setFocusable(false);
-        styleFormField(catBox);
-        gbc.gridy = 1;
-        form.add(catBox, gbc);
+        form.add(new JLabel("Category"));
+        form.add(catBox);
+        form.add(new JLabel("Amount (₹)"));
+        form.add(amountField);
+        form.add(new JLabel("Date"));
+        form.add(dateField);
+        form.add(new JLabel("Description"));
+        form.add(descField);
 
-        // Amount
-        gbc.gridy = 2;
-        form.add(createFormLabel("Amount (\u20B9)"), gbc);
-        JTextField amountField = createFormTextField(currentAmountStr);
-        gbc.gridy = 3;
-        form.add(amountField, gbc);
+        // Buttons
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton cancel = new JButton("Cancel");
+        JButton save   = new JButton("Save");
 
-        // Date
-        gbc.gridy = 4;
-        form.add(createFormLabel("Date (DD/MM/YYYY)"), gbc);
-        JTextField dateField = createFormTextField(currentDateDisplay);
-        gbc.gridy = 5;
-        form.add(dateField, gbc);
+        cancel.addActionListener(e -> dialog.dispose());
 
-        // Description
-        gbc.gridy = 6;
-        form.add(createFormLabel("Description"), gbc);
-        JTextField descField = createFormTextField(currentDesc != null ? currentDesc : "");
-        gbc.gridy = 7;
-        form.add(descField, gbc);
-
-        // ---- Buttons ----
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 14));
-        btnPanel.setBackground(new Color(245, 246, 252));
-        btnPanel.setBorder(new MatteBorder(1, 0, 0, 0, new Color(220, 220, 235)));
-
-        JButton cancelBtn = new JButton("Cancel");
-        cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        cancelBtn.setForeground(new Color(100, 100, 130));
-        cancelBtn.setBackground(Color.WHITE);
-        cancelBtn.setFocusPainted(false);
-        cancelBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        cancelBtn.setBorder(new CompoundBorder(
-                new LineBorder(new Color(200, 200, 220), 1, true),
-                new EmptyBorder(7, 18, 7, 18)
-        ));
-        cancelBtn.addActionListener(ev -> dialog.dispose());
-
-        JButton saveBtn = new JButton("Save Changes") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setPaint(new GradientPaint(0, 0, GRAD_TOP, getWidth(), 0, GRAD_BTM));
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        saveBtn.setFont(new Font("SansSerif", Font.BOLD, 13));
-        saveBtn.setForeground(Color.WHITE);
-        saveBtn.setContentAreaFilled(false);
-        saveBtn.setBorderPainted(false);
-        saveBtn.setFocusPainted(false);
-        saveBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        saveBtn.setBorder(new EmptyBorder(8, 20, 8, 20));
-
-        saveBtn.addActionListener(ev -> {
-            String newCategory = (String) catBox.getSelectedItem();
-            String amountText  = amountField.getText().trim();
-            String dateText    = dateField.getText().trim();
-            String descText    = descField.getText().trim();
-
-            // Validation
-            if (amountText.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Amount cannot be empty!", "Validation Error", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            double newAmount;
+        save.addActionListener(e -> {
             try {
-                newAmount = Double.parseDouble(amountText);
-                if (newAmount <= 0) throw new NumberFormatException();
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog, "Please enter a valid amount!", "Validation Error", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (dateText.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Date cannot be empty!", "Validation Error", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+                double amt = Double.parseDouble(amountField.getText());
 
-            String newDateDB = convertToDBDate(dateText);
+                ExpenseModel exp = new ExpenseModel();
+                exp.category    = (String) catBox.getSelectedItem();
+                exp.amount      = amt;
+                exp.date        = convertToDBDate(dateField.getText());
+                exp.description = descField.getText();
 
-            try {
                 ExpenseDAO dao = new ExpenseDAO();
-                boolean updated = dao.updateExpense(expenseId, newCategory, newAmount, newDateDB, descText);
+                boolean ok = dao.updateExpense(id, exp);
 
-                if (updated) {
-                    // Table row update karo
-                    tableModel.setValueAt(newCategory,                      selectedRow, 1);
-                    tableModel.setValueAt(String.format("%.2f", newAmount), selectedRow, 2);
-                    tableModel.setValueAt(dateText,                         selectedRow, 3);
-                    tableModel.setValueAt(descText,                         selectedRow, 4);
+                if (ok) {
+                    JOptionPane.showMessageDialog(dialog, "Expense updated successfully!");
 
-                    if (dashboard != null) dashboard.loadDashboardData();
+                    if (dashboard != null) {
+                        dashboard.loadDashboardData();
+                    }
 
                     dialog.dispose();
-
-                    JOptionPane.showMessageDialog(ViewExpensesScreen.this,
-                            "Expense updated successfully!",
-                            "Success", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    JOptionPane.showMessageDialog(dialog,
-                            "Failed to update. Please try again.",
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(dialog, "Update failed!");
                 }
+
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dialog,
-                        "Error: " + ex.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Invalid data!");
             }
         });
 
-        btnPanel.add(cancelBtn);
-        btnPanel.add(saveBtn);
+        btnPanel.add(cancel);
+        btnPanel.add(save);
 
-        dialog.add(header,   BorderLayout.NORTH);
-        dialog.add(form,     BorderLayout.CENTER);
+        // Add all
+        dialog.add(header, BorderLayout.NORTH);
+        dialog.add(form, BorderLayout.CENTER);
         dialog.add(btnPanel, BorderLayout.SOUTH);
+
         dialog.setVisible(true);
     }
 
-    /* ===================== DB SE LOAD ===================== */
+    
 
     private void loadFromDB() {
         try {
@@ -424,7 +335,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         }
     }
 
-    /* ===================== EMPTY CHECK ===================== */
+    
 
     private void checkEmpty() {
         boolean isEmpty = tableModel.getRowCount() == 0;
@@ -434,7 +345,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         repaint();
     }
 
-    /* ===================== LOAD DATA ===================== */
+   
 
     public void loadExpenses(ArrayList<ExpenseModel> expenses) {
         tableModel.setRowCount(0);
@@ -474,7 +385,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         }
     }
 
-    /* ===================== TABLE STYLING ===================== */
+
 
     private void styleTable(JTable table) {
         table.setFont(new Font("SansSerif", Font.PLAIN, 13));
@@ -505,7 +416,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         table.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
     }
 
-    /* ===================== ACTION LISTENER ===================== */
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -614,7 +524,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         }
     }
 
-    /* ===================== FORM HELPERS ===================== */
 
     private JLabel createFormLabel(String text) {
         JLabel lbl = new JLabel(text);
@@ -644,7 +553,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
         comp.setPreferredSize(new Dimension(0, 38));
     }
 
-    /* ===================== SIDEBAR HELPERS ===================== */
+ 
 
     private JLabel createSidebarLabel(String text) {
         JLabel lbl = new JLabel(text);

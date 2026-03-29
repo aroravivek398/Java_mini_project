@@ -59,12 +59,13 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
                 g2.dispose();
             }
         };
-        root.setLayout(new GridBagLayout()); // center card vertically + horizontally
+        root.setLayout(new GridBagLayout()); 
         root.setOpaque(true);
         setContentPane(root);
 
-        /* ===================== CARD ===================== */
-
+        
+        
+        //add expense card
         JPanel card = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -84,14 +85,14 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         card.setPreferredSize(new Dimension(400, 560));
         card.setMaximumSize(new Dimension(400, 560));
 
-        /* ---- Title ---- */
+        
         JLabel titleLabel = new JLabel("Add New Expense");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         titleLabel.setForeground(GRAD_TOP);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel subLabel = new JLabel("Fill in the details below");
-        subLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        subLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         subLabel.setForeground(new Color(150, 150, 180));
         subLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -100,14 +101,14 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         card.add(subLabel);
         card.add(Box.createVerticalStrut(24));
 
-        /* ---- Amount ---- */
+        
         card.add(createLabel("Amount (\u20B9)"));
         card.add(Box.createVerticalStrut(6));
         amountField = createTextField("e.g. 250");
         card.add(amountField);
         card.add(Box.createVerticalStrut(18));
 
-        /* ---- Category ---- */
+        
         card.add(createLabel("Category"));
         card.add(Box.createVerticalStrut(6));
         String[] cats = {"Food", "Transport", "Shopping", "Bills", "Health", "Other (Custom)"};
@@ -117,7 +118,7 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         card.add(categoryDropdown);
         card.add(Box.createVerticalStrut(10));
 
-        /* ---- Custom Category (hidden) ---- */
+        
         customCategoryPanel = new JPanel();
         customCategoryPanel.setLayout(new BoxLayout(customCategoryPanel, BoxLayout.Y_AXIS));
         customCategoryPanel.setOpaque(false);
@@ -132,7 +133,7 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
 
         card.add(customCategoryPanel);
 
-        /* ---- Date ---- */
+        
         card.add(createLabel("Date"));
         card.add(Box.createVerticalStrut(6));
         dateField = createTextField("DD/MM/YYYY");
@@ -141,12 +142,12 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         card.add(dateField);
         card.add(Box.createVerticalStrut(18));
 
-        /* ---- Description ---- */
+        
         card.add(createLabel("Description / Note"));
         card.add(Box.createVerticalStrut(6));
 
         descriptionField = new JTextArea(3, 1);
-        descriptionField.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        descriptionField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         descriptionField.setForeground(PH_COLOR);
         descriptionField.setText("Optional note...");
         descriptionField.setLineWrap(true);
@@ -180,7 +181,7 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         card.add(descScroll);
         card.add(Box.createVerticalStrut(28));
 
-        /* ---- Buttons ---- */
+        
         JPanel buttonRow = new JPanel(new GridLayout(1, 2, 15, 0));
         buttonRow.setOpaque(false);
         buttonRow.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -202,8 +203,7 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    /* ===================== ACTION LISTENER ===================== */
-
+  
     @Override
     public void actionPerformed(ActionEvent e) {
 
@@ -251,8 +251,8 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         }
     }
 
-    /* ===================== VALIDATION ===================== */
-
+    
+    
     private boolean validateForm() {
         String amt = amountField.getText().trim();
         if (amt.isEmpty() || amt.equals("e.g. 250")) {
@@ -294,11 +294,10 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
-    /* ===================== HELPERS ===================== */
-
+   
     private JLabel createLabel(String text) {
         JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("SansSerif", Font.BOLD, 13));
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
         lbl.setForeground(LABEL_CLR);
         lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
         return lbl;
@@ -306,7 +305,7 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
 
     private JTextField createTextField(String placeholder) {
         JTextField field = new JTextField();
-        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         field.setBackground(Color.WHITE);
         field.setForeground(PH_COLOR);
         field.setText(placeholder);
@@ -332,7 +331,7 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
     }
 
     private void styleDropdown(JComboBox<String> box) {
-        box.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        box.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         box.setBackground(Color.WHITE);
         box.setForeground(TEXT_COLOR);
         box.setBorder(new LineBorder(BORDER_CLR, 1, true));
@@ -357,7 +356,7 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
                 super.paintComponent(g);
             }
         };
-        btn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setForeground(fg);
         btn.setContentAreaFilled(false);
         btn.setOpaque(false);

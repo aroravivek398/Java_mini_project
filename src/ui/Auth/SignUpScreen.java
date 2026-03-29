@@ -25,8 +25,8 @@ public class SignUpScreen extends JFrame implements ActionListener {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        /* ---------- Gradient Background ---------- */
-
+        
+        //background gradient
         JPanel background = new JPanel() {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
@@ -41,24 +41,21 @@ public class SignUpScreen extends JFrame implements ActionListener {
         };
         background.setLayout(new GridBagLayout());
 
-        /* ---------- White Card ---------- */
-
+        
+        //Sign-Up Card
         JPanel card = new JPanel();
         card.setPreferredSize(new Dimension(340, 490));
         card.setBackground(Color.WHITE);
         card.setBorder(new EmptyBorder(30, 35, 30, 35));
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-
-        /* ---------- Title ---------- */
-
+        
         JLabel title = new JLabel("Create Account");
         title.setFont(new Font("Segoe UI", Font.BOLD, 24));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         card.add(title);
         card.add(Box.createVerticalStrut(24));
 
-        /* ---------- Input Fields ---------- */
-
+        
         nameField     = new JTextField();
         emailField    = new JTextField();
         passwordField = new JPasswordField();
@@ -73,8 +70,8 @@ public class SignUpScreen extends JFrame implements ActionListener {
         card.add(createInput("Re-enter Password", confirmField));
         card.add(Box.createVerticalStrut(24));
 
-        /* ---------- Rounded Sign Up Button ---------- */
-
+       
+        //Sign-Up button
         signUpButton = new JButton("Sign Up") {
             @Override
             protected void paintComponent(Graphics g) {
@@ -83,7 +80,7 @@ public class SignUpScreen extends JFrame implements ActionListener {
                 if (getModel().isPressed()) {
                     g2.setColor(new Color(30, 100, 200));
                 } else if (getModel().isRollover()) {
-                    g2.setColor(new Color(60, 140, 255));
+                    g2.setColor(new Color(30, 100, 200));
                 } else {
                     g2.setColor(new Color(40, 120, 230));
                 }
@@ -97,6 +94,7 @@ public class SignUpScreen extends JFrame implements ActionListener {
                 g2.dispose();
             }
         };
+        signUpButton.setRolloverEnabled(true);
         signUpButton.setFocusPainted(false);
         signUpButton.setContentAreaFilled(false);
         signUpButton.setBorderPainted(false);
@@ -111,17 +109,23 @@ public class SignUpScreen extends JFrame implements ActionListener {
         card.add(signUpButton);
         card.add(Box.createVerticalStrut(18));
 
-        /* ---------- Login Link ---------- */
-
+        
+        
         loginLabel = new JLabel("Already a member? Login");
         loginLabel.setForeground(new Color(90, 120, 255));
         loginLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         loginLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         loginLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         loginLabel.addMouseListener(new MouseAdapter() {
+        	public void mouseEntered(MouseEvent e) {
+                loginLabel.setForeground(new Color(60, 90, 220));
+            }
+            public void mouseExited(MouseEvent e) {
+                loginLabel.setForeground(new Color(90, 120, 255));
+            }
             public void mouseClicked(MouseEvent e) {
-                new LoginScreen();
-                dispose();
+            	new LoginScreen().setVisible(true);
+            	dispose();
             }
         });
 
@@ -133,32 +137,26 @@ public class SignUpScreen extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    /* ---------- Clean Input — small blue label + underline only ---------- */
-
+    
+    
+    //panel for input fields 
     private JPanel createInput(String labelText, JComponent field) {
-
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
         panel.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 52));
-
-        /* Small muted label above — like Login */
+        
         JLabel label = new JLabel(labelText);
         label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         label.setForeground(new Color(110, 130, 255));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        /* Field — transparent, just bottom border */
         field.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         field.setBorder(new MatteBorder(0, 0, 2, 0, new Color(90, 120, 255)));
         field.setOpaque(false);
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         field.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        if (field instanceof JTextField) {
-            ((JTextField) field).setHorizontalAlignment(JTextField.LEFT);
-        }
 
         panel.add(label);
         panel.add(Box.createVerticalStrut(3));
@@ -167,18 +165,15 @@ public class SignUpScreen extends JFrame implements ActionListener {
         return panel;
     }
 
-    /* ---------- Action ---------- */
-
+ 
+    //action listener
     @Override
     public void actionPerformed(ActionEvent e) {
-
         if (e.getSource() == signUpButton) {
-
             String name     = nameField.getText().trim();
             String email    = emailField.getText().trim();
             String password = new String(passwordField.getPassword());
             String confirm  = new String(confirmField.getPassword());
-
             if (Validator.isEmpty(name) || Validator.isEmpty(email)
                     || Validator.isEmpty(password) || Validator.isEmpty(confirm)) {
                 JOptionPane.showMessageDialog(this, "All fields are required");
@@ -196,7 +191,6 @@ public class SignUpScreen extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, "Passwords do not match");
                 return;
             }
-
             try {
                 DbConnection db = new DbConnection();
                 if (db.emailExists(email)) {
