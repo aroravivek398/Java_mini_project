@@ -287,11 +287,11 @@ public class BudgetScreen extends JFrame implements ActionListener {
 
         content.add(scrollPane, BorderLayout.CENTER);
 
-        /* ===================== ASSEMBLE ===================== */
+        
         add(sidebar, BorderLayout.WEST);
         add(content, BorderLayout.CENTER);
 
-        // ✅ FIX 1: Screen open hone pe existing budget prefill karo
+        
         prefillExistingBudget();
 
         setVisible(true);

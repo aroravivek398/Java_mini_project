@@ -30,10 +30,9 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
     private JButton saveButton;
     private JButton cancelButton;
 
-    // Same colors as Dashboard
     private static final Color GRAD_TOP   = new Color(90, 120, 255);
     private static final Color GRAD_BTM   = new Color(150, 70, 210);
-    private static final Color CARD_BG    = new Color(255, 255, 255, 220); // white with slight transparency
+    private static final Color CARD_BG    = new Color(255, 255, 255, 220); 
     private static final Color LABEL_CLR  = new Color(60, 60, 90);
     private static final Color BORDER_CLR = new Color(210, 210, 230);
     private static final Color PH_COLOR   = new Color(180, 180, 205);
@@ -49,7 +48,6 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setResizable(false);
 
-        // Root panel — full gradient background
         JPanel root = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -240,6 +238,9 @@ public class AddExpenseScreen extends JFrame implements ActionListener {
                 boolean success  = dao.addExpense(expense);
                 if (success) {
                     JOptionPane.showMessageDialog(this, "Expense saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    DashboardScreen ds=new DashboardScreen(user);
+                    dashboard.loadDashboardData();
+                    dashboard.setVisible(true);
                     dispose();
                 } else {
                     showError("Failed to save expense. Please try again!");

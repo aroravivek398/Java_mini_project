@@ -31,8 +31,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
     private JScrollPane scrollPane;
     private JLabel emptyLabel;
 
-
-    // ✅ Expense IDs store karne ke liye — row index se id milegi
+    // Expense IDs store karne ke liye
     private ArrayList<Integer> expenseIds = new ArrayList<>();
 
     // Action buttons
@@ -217,12 +216,197 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
         content.add(tableWrapper, BorderLayout.CENTER);
 
-        add(sidebar,  BorderLayout.WEST);
-        add(content,  BorderLayout.CENTER);
+        add(sidebar, BorderLayout.WEST);
+        add(content, BorderLayout.CENTER);
 
         loadFromDB();
-
         setVisible(true);
+    }
+
+    /* ===================== EDIT DIALOG ===================== */
+
+    private void showEditDialog(int selectedRow) {
+        int expenseId = expenseIds.get(selectedRow);
+
+        // Current values table se nikalo
+        String currentCategory    = (String) tableModel.getValueAt(selectedRow, 1);
+        String currentAmountStr   = (String) tableModel.getValueAt(selectedRow, 2);
+        String currentDateDisplay = (String) tableModel.getValueAt(selectedRow, 3);
+        String currentDesc        = (String) tableModel.getValueAt(selectedRow, 4);
+
+        // ---- Dialog ----
+        JDialog dialog = new JDialog(this, "Edit Expense", true);
+        dialog.setSize(420, 420);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+        dialog.setResizable(false);
+
+        // ---- Header ----
+        JPanel header = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setPaint(new GradientPaint(0, 0, GRAD_TOP, getWidth(), 0, GRAD_BTM));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.dispose();
+            }
+        };
+        header.setPreferredSize(new Dimension(420, 58));
+        header.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 16));
+
+        JLabel headerTitle = new JLabel("Edit Expense");
+        headerTitle.setFont(new Font("SansSerif", Font.BOLD, 16));
+        headerTitle.setForeground(Color.WHITE);
+        header.add(headerTitle);
+
+        // ---- Form ----
+        JPanel form = new JPanel();
+        form.setBackground(Color.WHITE);
+        form.setLayout(new GridBagLayout());
+        form.setBorder(new EmptyBorder(20, 25, 10, 25));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill      = GridBagConstraints.HORIZONTAL;
+        gbc.insets    = new Insets(5, 0, 5, 0);
+        gbc.weightx   = 1.0;
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+
+        // Category
+        gbc.gridy = 0;
+        form.add(createFormLabel("Category"), gbc);
+
+        String[] cats = {"Food", "Transport", "Shopping", "Bills", "Health", "Other"};
+        JComboBox<String> catBox = new JComboBox<>(cats);
+        catBox.setSelectedItem(currentCategory);
+        catBox.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        catBox.setBackground(Color.WHITE);
+        catBox.setFocusable(false);
+        styleFormField(catBox);
+        gbc.gridy = 1;
+        form.add(catBox, gbc);
+
+        // Amount
+        gbc.gridy = 2;
+        form.add(createFormLabel("Amount (\u20B9)"), gbc);
+        JTextField amountField = createFormTextField(currentAmountStr);
+        gbc.gridy = 3;
+        form.add(amountField, gbc);
+
+        // Date
+        gbc.gridy = 4;
+        form.add(createFormLabel("Date (DD/MM/YYYY)"), gbc);
+        JTextField dateField = createFormTextField(currentDateDisplay);
+        gbc.gridy = 5;
+        form.add(dateField, gbc);
+
+        // Description
+        gbc.gridy = 6;
+        form.add(createFormLabel("Description"), gbc);
+        JTextField descField = createFormTextField(currentDesc != null ? currentDesc : "");
+        gbc.gridy = 7;
+        form.add(descField, gbc);
+
+        // ---- Buttons ----
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 14));
+        btnPanel.setBackground(new Color(245, 246, 252));
+        btnPanel.setBorder(new MatteBorder(1, 0, 0, 0, new Color(220, 220, 235)));
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        cancelBtn.setForeground(new Color(100, 100, 130));
+        cancelBtn.setBackground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+        cancelBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        cancelBtn.setBorder(new CompoundBorder(
+                new LineBorder(new Color(200, 200, 220), 1, true),
+                new EmptyBorder(7, 18, 7, 18)
+        ));
+        cancelBtn.addActionListener(ev -> dialog.dispose());
+
+        JButton saveBtn = new JButton("Save Changes") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setPaint(new GradientPaint(0, 0, GRAD_TOP, getWidth(), 0, GRAD_BTM));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        saveBtn.setFont(new Font("SansSerif", Font.BOLD, 13));
+        saveBtn.setForeground(Color.WHITE);
+        saveBtn.setContentAreaFilled(false);
+        saveBtn.setBorderPainted(false);
+        saveBtn.setFocusPainted(false);
+        saveBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        saveBtn.setBorder(new EmptyBorder(8, 20, 8, 20));
+
+        saveBtn.addActionListener(ev -> {
+            String newCategory = (String) catBox.getSelectedItem();
+            String amountText  = amountField.getText().trim();
+            String dateText    = dateField.getText().trim();
+            String descText    = descField.getText().trim();
+
+            // Validation
+            if (amountText.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Amount cannot be empty!", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            double newAmount;
+            try {
+                newAmount = Double.parseDouble(amountText);
+                if (newAmount <= 0) throw new NumberFormatException();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Please enter a valid amount!", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (dateText.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Date cannot be empty!", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            String newDateDB = convertToDBDate(dateText);
+
+            try {
+                ExpenseDAO dao = new ExpenseDAO();
+                boolean updated = dao.updateExpense(expenseId, newCategory, newAmount, newDateDB, descText);
+
+                if (updated) {
+                    // Table row update karo
+                    tableModel.setValueAt(newCategory,                      selectedRow, 1);
+                    tableModel.setValueAt(String.format("%.2f", newAmount), selectedRow, 2);
+                    tableModel.setValueAt(dateText,                         selectedRow, 3);
+                    tableModel.setValueAt(descText,                         selectedRow, 4);
+
+                    if (dashboard != null) dashboard.loadDashboardData();
+
+                    dialog.dispose();
+
+                    JOptionPane.showMessageDialog(ViewExpensesScreen.this,
+                            "Expense updated successfully!",
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(dialog,
+                            "Failed to update. Please try again.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog,
+                        "Error: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnPanel.add(cancelBtn);
+        btnPanel.add(saveBtn);
+
+        dialog.add(header,   BorderLayout.NORTH);
+        dialog.add(form,     BorderLayout.CENTER);
+        dialog.add(btnPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
     }
 
     /* ===================== DB SE LOAD ===================== */
@@ -230,7 +414,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
     private void loadFromDB() {
         try {
             ExpenseDAO dao = new ExpenseDAO();
-            // ✅ FIX: DB se ORDER BY date DESC — latest pehle
             ArrayList<ExpenseModel> expenses = dao.getAllExpense(user.getId());
             loadExpenses(expenses);
         } catch (Exception ex) {
@@ -255,8 +438,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
 
     public void loadExpenses(ArrayList<ExpenseModel> expenses) {
         tableModel.setRowCount(0);
-
-        expenseIds.clear(); // ✅ pehle clear karo
+        expenseIds.clear();
 
         int i = 1;
         for (ExpenseModel exp : expenses) {
@@ -264,19 +446,14 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                 i++,
                 exp.category,
                 String.format("%.2f", exp.amount),
-
-                formatDate(exp.date),   // ✅ FIX: YYYY-MM-DD → DD/MM/YYYY
-
                 formatDate(exp.date),
-
                 exp.description
             });
-            expenseIds.add(exp.getId()); // ✅ har row ka id save karo
+            expenseIds.add(exp.getId());
         }
         checkEmpty();
     }
 
-    /* ===================== DATE HELPERS ===================== */
 
 
     private String formatDate(String date) {
@@ -287,8 +464,6 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
             return date;
         }
     }
-
-
 
     private String convertToDBDate(String displayDate) {
         try {
@@ -349,16 +524,9 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                 ArrayList<ExpenseModel> filtered;
 
                 if (dateFilter) {
-
-                    // ✅ FIX: DD/MM/YYYY → YYYY-MM-DD convert karke DB mein query karo
                     String fromDB = convertToDBDate(from);
                     String toDB   = convertToDBDate(to);
                     filtered = dao.searchByDate(user.getId(), fromDB, toDB);
-
-                    // Category bhi apply karo agar select hai
-
-                    filtered = dao.searchByDate(user.getId(), fromDB, toDB);
-
                     if (catFilter) {
                         filtered.removeIf(exp -> !exp.category.equalsIgnoreCase(selectedCat));
                     }
@@ -392,7 +560,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                         "No Selection", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            
+            showEditDialog(selectedRow);
 
         } else if (e.getSource() == deleteButton) {
             int selectedRow = expenseTable.getSelectedRow();
@@ -402,31 +570,81 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
                         "No Selection", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            
-            try {
-            	ExpenseDAO dao=new ExpenseDAO();
-				int expenseId = dao.getAllExpense(user.getId()).get(selectedRow).getId();
-		
-				boolean isdeleted = dao.deleteExpense(expenseId);
-				if(isdeleted) {
-					ArrayList<ExpenseModel> updated;
-					updated = dao.getAllExpense(user.getId());
-					loadExpenses(updated);
-					JOptionPane.showMessageDialog(this, "Deleted Successfully", "Successfull Deletion", JOptionPane.INFORMATION_MESSAGE);
-				}else {
-					JOptionPane.showMessageDialog(this, "Not Deleted", "Unsuccessfull Deletion", JOptionPane.INFORMATION_MESSAGE);
-				}
 
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
+            int expenseId = expenseIds.get(selectedRow);
+
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Are you sure? This expense will be deleted permanently.",
+                    "Delete Confirm", JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    ExpenseDAO dao = new ExpenseDAO();
+                    boolean deleted = dao.deleteExpense(expenseId);
+
+                    if (deleted) {
+                        tableModel.removeRow(selectedRow);
+                        expenseIds.remove(selectedRow);
+
+                        for (int i = 0; i < tableModel.getRowCount(); i++) {
+                            tableModel.setValueAt(i + 1, i, 0);
+                        }
+
+                        checkEmpty();
+                        if (dashboard != null) dashboard.loadDashboardData();
+
+                        JOptionPane.showMessageDialog(this,
+                                "Expense deleted successfully!",
+                                "Deleted", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(this,
+                                "Failed to delete. Please try again.",
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Error: " + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
 
         } else if (e.getSource() == backButton) {
             dispose();
         }
     }
 
-    /* ===================== HELPER METHODS ===================== */
+    /* ===================== FORM HELPERS ===================== */
+
+    private JLabel createFormLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lbl.setForeground(new Color(100, 100, 130));
+        return lbl;
+    }
+
+    private JTextField createFormTextField(String value) {
+        JTextField field = new JTextField(value);
+        field.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        field.setForeground(TEXT_COLOR);
+        field.setBackground(Color.WHITE);
+        field.setBorder(new CompoundBorder(
+                new LineBorder(new Color(200, 200, 230), 1, true),
+                new EmptyBorder(8, 10, 8, 10)
+        ));
+        field.setPreferredSize(new Dimension(0, 38));
+        return field;
+    }
+
+    private void styleFormField(JComponent comp) {
+        comp.setBorder(new CompoundBorder(
+                new LineBorder(new Color(200, 200, 230), 1, true),
+                new EmptyBorder(6, 8, 6, 8)
+        ));
+        comp.setPreferredSize(new Dimension(0, 38));
+    }
+
+    /* ===================== SIDEBAR HELPERS ===================== */
 
     private JLabel createSidebarLabel(String text) {
         JLabel lbl = new JLabel(text);

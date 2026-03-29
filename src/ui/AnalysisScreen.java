@@ -33,11 +33,10 @@ public class AnalysisScreen extends JFrame implements ActionListener {
 
     private JButton backButton;
     private JComboBox<String> chartSelector;
-    private JPanel chartArea; // chart yahan swap hoga
+    private JPanel chartArea; 
 
     private ArrayList<ExpenseModel> expenses;
 
-    // Colors — same as rest of app
     private static final Color GRAD_TOP   = new Color(90, 120, 255);
     private static final Color GRAD_BTM   = new Color(150, 70, 210);
     private static final Color BG_COLOR   = new Color(245, 246, 252);

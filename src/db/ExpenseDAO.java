@@ -168,4 +168,14 @@ public class ExpenseDAO {
         conn.close();
         return list;
     }
+
+	public boolean updateExpense(int expenseId, String newCategory, double newAmount, String newDateDB,
+			String descText) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+    
+    
+    
+    
 }
