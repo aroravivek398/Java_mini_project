@@ -28,7 +28,20 @@ public class ExpenseDAO {
         conn.close();
         return rowsAffected > 0;
     }
-	
+    public boolean updateExpense(int expenseId,ExpenseModel newexpense) throws Exception{
+    	primaryExecution();
+    	String query = "update expenses set date = ? , category = ? , amount = ? , descp = ? where id = ?";
+    	 PreparedStatement ps = conn.prepareStatement(query);
+    	 ps.setString(1, newexpense.date);
+         ps.setString(2, newexpense.category);
+         ps.setDouble(3, newexpense.amount);
+         ps.setString(4, newexpense.description);
+         ps.setInt(5, expenseId);
+         int rows = ps.executeUpdate();
+         ps.close();
+         conn.close();
+         return rows > 0;
+    }
 	public ArrayList<ExpenseModel> getAllExpense(int userId) throws Exception{
 		primaryExecution();
 		String query = "select * from expenses where user_id = ? order by date desc";
