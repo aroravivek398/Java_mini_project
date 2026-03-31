@@ -21,7 +21,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
     private JButton backButton;
     private JButton saveButton;
 
-    // Budget input fields — category wise
     private JTextField totalBudgetField;
     private JTextField foodField;
     private JTextField transportField;
@@ -30,14 +29,11 @@ public class BudgetScreen extends JFrame implements ActionListener {
     private JTextField healthField;
     private JTextField otherField;
 
-    // Month/Year selector
     private JComboBox<String> monthSelector;
     private JComboBox<String> yearSelector;
 
-    // Summary panel
     private JPanel summaryPanel;
 
-    // Colors
     private static final Color GRAD_TOP   = new Color(90, 120, 255);
     private static final Color GRAD_BTM   = new Color(150, 70, 210);
     private static final Color BG_COLOR   = new Color(245, 246, 252);
@@ -100,7 +96,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
         sideSub.setForeground(new Color(200, 210, 255));
         sideSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Month selector
         JLabel monthLabel = new JLabel("Month");
         monthLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
         monthLabel.setForeground(new Color(200, 210, 255));
@@ -114,7 +109,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
         monthSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
         monthSelector.setFocusable(false);
 
-        // Year selector
         JLabel yearLabel = new JLabel("Year");
         yearLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
         yearLabel.setForeground(new Color(200, 210, 255));
@@ -133,6 +127,10 @@ public class BudgetScreen extends JFrame implements ActionListener {
         yearSelector.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
         yearSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
         yearSelector.setFocusable(false);
+
+        
+        monthSelector.addActionListener(this);
+        yearSelector.addActionListener(this);
 
         sidebar.add(appName);
         sidebar.add(Box.createVerticalStrut(8));
@@ -179,7 +177,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
 
         content.add(titlePanel, BorderLayout.NORTH);
 
-        /* ---- Two column layout: Input | Summary ---- */
         JPanel mainRow = new JPanel(new GridLayout(1, 2, 20, 0));
         mainRow.setOpaque(false);
         JScrollPane scrollPane = new JScrollPane(mainRow);
@@ -198,7 +195,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
         inputCard.add(inputTitle);
         inputCard.add(Box.createVerticalStrut(16));
 
-        // Total budget
         inputCard.add(createFieldLabel("Total Monthly Budget"));
         inputCard.add(Box.createVerticalStrut(5));
         totalBudgetField = createInputField("e.g. 10000");
@@ -220,7 +216,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
         inputCard.add(catLabel);
         inputCard.add(Box.createVerticalStrut(10));
 
-        // Category fields
         inputCard.add(createFieldLabel("Food"));
         inputCard.add(Box.createVerticalStrut(4));
         foodField = createInputField("e.g. 3000");
@@ -257,7 +252,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
         inputCard.add(otherField);
         inputCard.add(Box.createVerticalStrut(18));
 
-        // Save button
         saveButton = createActionButton("Save & Compare", GRAD_TOP, Color.WHITE);
         saveButton.addActionListener(this);
         saveButton.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -287,7 +281,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
 
         content.add(scrollPane, BorderLayout.CENTER);
 
-        
         add(sidebar, BorderLayout.WEST);
         add(content, BorderLayout.CENTER);
 
@@ -297,12 +290,19 @@ public class BudgetScreen extends JFrame implements ActionListener {
         setVisible(true);
     }
 
+    /* ===================== PREFILL — selected month/year ke liye ===================== */
 
-    // ✅ DB se current month ka budget fetch karke fields mein fill karo
     private void prefillExistingBudget() {
+        int selectedMonth = monthSelector.getSelectedIndex() + 1;
+        int selectedYear  = Integer.parseInt((String) yearSelector.getSelectedItem());
+
+        
+        resetFields();
+
         try {
             BudgetDAO budgetDao = new BudgetDAO();
-            BudgetModel existing = budgetDao.getCurrentBudget(user.getId()); 
+            
+            BudgetModel existing = budgetDao.getBudgetByMonth(user.getId(), selectedMonth, selectedYear);
             if (existing != null) {
                 setFieldValue(totalBudgetField, "e.g. 10000", existing.budget_amount);
             }
@@ -311,7 +311,23 @@ public class BudgetScreen extends JFrame implements ActionListener {
         }
     }
 
-    // Helper — field mein double value set karo aur placeholder hata do
+    /* ===================== RESET ALL FIELDS ===================== */
+
+    private void resetFields() {
+        resetField(totalBudgetField, "e.g. 10000");
+        resetField(foodField,        "e.g. 3000");
+        resetField(transportField,   "e.g. 1500");
+        resetField(shoppingField,    "e.g. 2000");
+        resetField(billsField,       "e.g. 2000");
+        resetField(healthField,      "e.g. 1000");
+        resetField(otherField,       "e.g. 500");
+    }
+
+    private void resetField(JTextField field, String placeholder) {
+        field.setText(placeholder);
+        field.setForeground(new Color(180, 180, 205));
+    }
+
     private void setFieldValue(JTextField field, String placeholder, double value) {
         if (value > 0) {
             field.setText(String.format("%.2f", value));
@@ -327,14 +343,41 @@ public class BudgetScreen extends JFrame implements ActionListener {
             saveAndCompare();
         } else if (e.getSource() == backButton) {
             dispose();
+        } else if (e.getSource() == monthSelector || e.getSource() == yearSelector) {
+            // ✅ Month ya year badla — usi mahine ka budget prefill karo
+            prefillExistingBudget();
+
+            // Summary bhi reset karo — purana month ka data na dikhe
+            resetSummary();
         }
+    }
+
+    /* ===================== RESET SUMMARY ===================== */
+
+    private void resetSummary() {
+        summaryPanel.removeAll();
+
+        JLabel summaryTitle = new JLabel("Summary");
+        summaryTitle.setFont(new Font("SansSerif", Font.BOLD, 16));
+        summaryTitle.setForeground(GRAD_TOP);
+        summaryTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel summaryHint = new JLabel("Click 'Save & Compare' to see results");
+        summaryHint.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        summaryHint.setForeground(new Color(170, 170, 190));
+        summaryHint.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        summaryPanel.add(summaryTitle);
+        summaryPanel.add(Box.createVerticalStrut(10));
+        summaryPanel.add(summaryHint);
+
+        summaryPanel.revalidate();
+        summaryPanel.repaint();
     }
 
     /* ===================== SAVE & COMPARE ===================== */
 
     private void saveAndCompare() {
-
-        // Validate fields
         double totalBudget     = parseField(totalBudgetField, "Total Budget");
         if (totalBudget < 0) return;
 
@@ -348,7 +391,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
         if (foodBudget < 0 || transportBudget < 0 || shoppingBudget < 0 ||
             billsBudget < 0 || healthBudget < 0 || otherBudget < 0) return;
 
-        // Total budget zero nahi hona chahiye
         if (totalBudget == 0) {
             JOptionPane.showMessageDialog(this,
                     "Please enter a Total Monthly Budget!", "Error", JOptionPane.WARNING_MESSAGE);
@@ -357,18 +399,16 @@ public class BudgetScreen extends JFrame implements ActionListener {
 
         int selectedMonth = monthSelector.getSelectedIndex() + 1;
         int selectedYear  = Integer.parseInt((String) yearSelector.getSelectedItem());
-
-        // ✅ FIX 2: Budget DB mein save karo
+        boolean flag=false;
         try {
-            BudgetModel budget = new BudgetModel(user.getId(), selectedMonth, selectedYear,totalBudget);
-            new BudgetDAO().setBudget(user.getId(),budget);
+            BudgetModel budget = new BudgetModel(user.getId(), selectedMonth, selectedYear, totalBudget);
+            if(new BudgetDAO().setBudget(user.getId(), budget)) flag=true;
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Error saving budget: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // ✅ FIX 3: DB se category-wise expenses fetch karo (Java filter nahi, DB query)
         double totalSpent = 0, foodSpent = 0, transportSpent = 0,
                shoppingSpent = 0, billsSpent = 0, healthSpent = 0, otherSpent = 0;
 
@@ -380,15 +420,14 @@ public class BudgetScreen extends JFrame implements ActionListener {
             billsSpent     = expenseDao.getMonthlyExpenseByCategory(user.getId(), "bills",     selectedMonth, selectedYear);
             healthSpent    = expenseDao.getMonthlyExpenseByCategory(user.getId(), "health",    selectedMonth, selectedYear);
             otherSpent     = expenseDao.getMonthlyExpenseByCategory(user.getId(), "other",     selectedMonth, selectedYear);
-            totalSpent = expenseDao.getMonthlyTotal(user.getId(), selectedMonth, selectedYear);
+            totalSpent     = expenseDao.getMonthlyTotal(user.getId(), selectedMonth, selectedYear);
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Error loading expenses: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        // Summary panel update karo
+        
         updateSummary(
             selectedMonth, selectedYear,
             totalBudget,      totalSpent,
@@ -397,7 +436,7 @@ public class BudgetScreen extends JFrame implements ActionListener {
             shoppingBudget,   shoppingSpent,
             billsBudget,      billsSpent,
             healthBudget,     healthSpent,
-            otherBudget,      otherSpent
+            otherBudget,      otherSpent,flag
         );
     }
 
@@ -411,10 +450,23 @@ public class BudgetScreen extends JFrame implements ActionListener {
             double shopB,   double shopS,
             double billsB,  double billsS,
             double healthB, double healthS,
-            double otherB,  double otherS) {
+            double otherB,  double otherS , boolean flag) {
 
         summaryPanel.removeAll();
-
+        if(!flag) {
+        	JLabel title = new JLabel("Summary — " + MONTHS[month - 1] + " " + year);
+            title.setFont(new Font("SansSerif", Font.BOLD, 16));
+            title.setForeground(GRAD_TOP);
+            title.setAlignmentX(Component.LEFT_ALIGNMENT);
+            summaryPanel.add(title);
+            summaryPanel.add(Box.createVerticalStrut(14));
+            JLabel warning = new JLabel("Budget Already Set!");
+            warning.setFont(new Font("SansSerif", Font.BOLD, 13));
+            warning.setForeground(DANGER);
+            warning.setAlignmentX(Component.LEFT_ALIGNMENT);
+            summaryPanel.add(warning);
+            return;
+        }
         JLabel title = new JLabel("Summary — " + MONTHS[month - 1] + " " + year);
         title.setFont(new Font("SansSerif", Font.BOLD, 16));
         title.setForeground(GRAD_TOP);
@@ -422,7 +474,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
         summaryPanel.add(title);
         summaryPanel.add(Box.createVerticalStrut(14));
 
-        // Total row
         summaryPanel.add(createSummaryRow("Total", totalBudget, totalSpent, true));
         summaryPanel.add(Box.createVerticalStrut(6));
 
@@ -433,7 +484,6 @@ public class BudgetScreen extends JFrame implements ActionListener {
         summaryPanel.add(div);
         summaryPanel.add(Box.createVerticalStrut(10));
 
-        // Category rows — sirf wo dikhao jinka budget set hai
         if (foodB   > 0) { summaryPanel.add(createSummaryRow("Food",      foodB,   foodS,   false)); summaryPanel.add(Box.createVerticalStrut(8)); }
         if (transB  > 0) { summaryPanel.add(createSummaryRow("Transport", transB,  transS,  false)); summaryPanel.add(Box.createVerticalStrut(8)); }
         if (shopB   > 0) { summaryPanel.add(createSummaryRow("Shopping",  shopB,   shopS,   false)); summaryPanel.add(Box.createVerticalStrut(8)); }
@@ -441,19 +491,17 @@ public class BudgetScreen extends JFrame implements ActionListener {
         if (healthB > 0) { summaryPanel.add(createSummaryRow("Health",    healthB, healthS, false)); summaryPanel.add(Box.createVerticalStrut(8)); }
         if (otherB  > 0) { summaryPanel.add(createSummaryRow("Other",     otherB,  otherS,  false)); summaryPanel.add(Box.createVerticalStrut(8)); }
 
-        // Budget exceed warning
         if (totalSpent > totalBudget && totalBudget > 0) {
             summaryPanel.add(Box.createVerticalStrut(6));
-            JLabel warning = new JLabel("\u26A0 Budget exceeded by \u20B9" +
+            JLabel warning = new JLabel("Budget exceeded by \u20B9" +
                     String.format("%.2f", totalSpent - totalBudget) + "!");
             warning.setFont(new Font("SansSerif", Font.BOLD, 13));
             warning.setForeground(DANGER);
             warning.setAlignmentX(Component.LEFT_ALIGNMENT);
             summaryPanel.add(warning);
         } else if (totalBudget > 0) {
-            // ✅ Budget Left bhi dikhao
             summaryPanel.add(Box.createVerticalStrut(6));
-            JLabel safe = new JLabel("\u2705 Budget Left: \u20B9" +
+            JLabel safe = new JLabel("Budget Left: \u20B9" +
                     String.format("%.2f", totalBudget - totalSpent));
             safe.setFont(new Font("SansSerif", Font.BOLD, 13));
             safe.setForeground(SUCCESS);

@@ -165,5 +165,26 @@ public class BudgetDAO {
 		return budgetAmount - totalSpent;
 	}
 
+	 public BudgetModel getBudgetByMonth(int user_id, int month, int year) throws Exception {
+	        primaryExecution();
+	        String query = "SELECT * FROM budgets WHERE user_id=? AND month=? AND year=?";
+	        PreparedStatement ps = conn.prepareStatement(query);
+	        ps.setInt(1, user_id);
+	        ps.setInt(2, month);
+	        ps.setInt(3, year);
+	        ResultSet rs = ps.executeQuery();
+	        BudgetModel model = null;
+	        if (rs.next()) {
+	            model = new BudgetModel(
+	                rs.getInt("user_id"), rs.getInt("month"),
+	                rs.getInt("year"),   rs.getDouble("budget_amount")
+	            );
+	            model.setId(rs.getInt("id"));
+	        }
+	        ps.close();
+	        conn.close();
+	        return model;
+	    }
+
 
 }

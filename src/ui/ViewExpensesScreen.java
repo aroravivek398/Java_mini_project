@@ -307,6 +307,7 @@ public class ViewExpensesScreen extends JFrame implements ActionListener {
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(dialog, "Invalid data!");
             }
+            loadFromDB();
         });
 
         btnPanel.add(cancel);
